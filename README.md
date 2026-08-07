@@ -158,7 +158,7 @@ kurospace/
 ### 1. Clone
 
 ```bash
-git clone https://github.com/<your-org-or-user>/kurospace.git
+git clone https://github.com/Azeru548/kurospace.git
 cd kurospace
 ```
 
