@@ -351,9 +351,33 @@ Requires DNS wildcard (`*.kurospace.com`) and Netlify domain config when you go 
 
 ---
 
+## Email (SendLib)
+
+Provider docs: [Basic Send](https://sendlib.samueltuoyo.com/docs/send)
+
+```http
+POST https://sendlib.samueltuoyo.com/api/send
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+| Env | Purpose |
+|-----|---------|
+| `SENDLIB_API_KEY` | API key from SendLib |
+| `SENDLIB_BASE_URL` | Default `https://sendlib.samueltuoyo.com` |
+| `EMAIL_FROM` / `SENDLIB_FROM` | Optional connected Gmail to send from |
+| `EMAIL_REPLY_TO` | Optional reply-to |
+
+**Triggers**
+
+1. Checkout started → email vendor + customer (payment pending)
+2. Bachs payment succeeded → email vendor + customer (paid)
+
+**Dev test:** `POST /api/email/test` with `{ "to": "you@example.com" }`
+
 ## Roadmap
 
-- [ ] Custom email provider (order alerts)
+- [x] Order / payment emails via SendLib
 - [ ] Vendor payouts / multi-merchant Bachs
 - [ ] Rich analytics charts
 - [ ] In-app notifications realtime
