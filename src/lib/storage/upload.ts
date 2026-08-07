@@ -52,7 +52,10 @@ export async function uploadVendorImage(
   const form = new FormData();
   form.append("file", file);
   form.append("upload_preset", uploadPreset);
+  // Unique public_id so preset "unique_filename: false" never overwrites another image
+  const publicId = `${folder}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
   form.append("folder", `kurospace/vendors/${vendorId}/${folder}`);
+  form.append("public_id", publicId);
   form.append("context", `vendorId=${vendorId}|folder=${folder}`);
 
   const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
