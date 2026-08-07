@@ -62,7 +62,7 @@ Vendors sign up, list products and services, manage orders from a dashboard, and
 
 - Email/password signup & login (Firebase Auth)
 - Business onboarding (name, category, city/state, unique store slug)
-- Products & services CRUD with image upload (Firebase Storage)
+- Products & services CRUD with image upload (Cloudinary)
 - Orders list + status updates
 - Storefront branding: colours, fonts, theme, layout + live preview
 - Publish / unpublish store
@@ -89,7 +89,7 @@ Vendors sign up, list products and services, manage orders from a dashboard, and
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
 │  Browser        │────▶│  Next.js (Netlify)│────▶│  Firebase       │
-│  Vendor / Buyer │     │  App + API routes │     │  Auth/FS/Storage│
+│  Vendor / Buyer │     │  App + API routes │     │  Auth + Firestore│
 └─────────────────┘     └────────┬─────────┘     └─────────────────┘
                                  │
                     ┌────────────┼────────────┐
@@ -230,8 +230,8 @@ Copy from `.env.example`.
 2. **Firestore** → Create database
 3. **Rules** → publish `firestore.rules`  
    *(Images use Cloudinary — you do **not** need Firebase Storage / Blaze.)*
-5. **Indexes** → import `firestore.indexes.json` or accept console prompts when queries fail
-6. **Service account** → Project settings → Service accounts → Generate key  
+4. **Indexes** → import `firestore.indexes.json` or accept console prompts when queries fail
+5. **Service account** → Project settings → Service accounts → Generate key  
    - Local: place JSON in project root, set `FIREBASE_SERVICE_ACCOUNT_PATH=./your-file.json`  
    - File is gitignored via `*firebase-adminsdk*.json`
 
