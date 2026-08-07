@@ -6,6 +6,10 @@ import {
   isBachsConfigured,
 } from "@/lib/bachs/config";
 import { getAdminDb, isAdminConfigured } from "@/lib/firebase/admin";
+import {
+  emailCustomerOrder,
+  emailVendorNewOrder,
+} from "@/lib/email/order-emails";
 import { FieldValue } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
@@ -75,7 +79,7 @@ export async function POST(request: Request) {
       cancelUrl,
     });
 
-    // Attach Bachs checkout ids to the order (Admin if available; otherwise client already has pending)
+    // Attach Bachs checkout ids + email vendor (Admin preferred for order read)
     if (isAdminConfigured()) {
       try {
         const db = getAdminDb();
@@ -90,8 +94,41 @@ export async function POST(request: Request) {
           },
           { merge: true }
         );
+
+        const [orderSnap, vendorSnap] = await Promise.all([
+          db.collection("orders").doc(orderId).get(),
+          db.collection("vendors").doc(vendorId).get(),
+        ]);
+        const order = orderSnap.data();
+        const vendor = vendorSnap.data();
+        const items = (order?.items || []) as {
+          name: string;
+          quantity: number;
+          price: number;
+        }[];
+
+        const emailPayload = {
+          orderNumber,
+          orderId,
+          vendorName: (vendor?.businessName as string) || vendorSlug,
+          vendorSlug,
+          customerName: customer.name.trim(),
+          customerEmail: customer.email.trim(),
+          customerPhone: customer.phone,
+          items: items.map((i) => ({
+            name: i.name,
+            quantity: i.quantity,
+            price: i.price,
+          })),
+          total: amountNgn,
+          paymentStatus: "pending (checkout started)",
+        };
+
+        // Business email on vendor profile (set during onboarding / settings)
+        void emailVendorNewOrder(vendor?.email as string | undefined, emailPayload);
+        void emailCustomerOrder(customer.email, emailPayload);
       } catch (e) {
-        console.error("[create-checkout] failed to patch order", e);
+        console.error("[create-checkout] failed to patch order / email", e);
       }
     }
 

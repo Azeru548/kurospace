@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { verifyBachsSignature, type BachsWebhookEvent } from "@/lib/bachs/webhook";
 import { getAdminDb, isAdminConfigured } from "@/lib/firebase/admin";
+import {
+  emailCustomerOrder,
+  emailVendorPaymentReceived,
+} from "@/lib/email/order-emails";
 import { FieldValue, type Firestore } from "firebase-admin/firestore";
 
 export const runtime = "nodejs";
@@ -132,28 +136,65 @@ async function handleCollectionSucceeded(db: Firestore, event: BachsWebhookEvent
     { merge: true }
   );
 
-  // Best-effort vendor notification stub (email provider later)
+  // In-app notification + SendLib emails
   try {
     const orderSnap = await db.collection("orders").doc(orderId).get();
     const order = orderSnap.data();
-    if (order?.vendorId) {
-      const vendorSnap = await db.collection("vendors").doc(order.vendorId).get();
-      const vendor = vendorSnap.data();
-      const ownerId = vendor?.ownerId as string | undefined;
-      if (ownerId) {
-        await db.collection("users").doc(ownerId).collection("notifications").add({
-          type: "order_placed",
-          title: "Payment received",
-          body: `Order ${order.orderNumber || orderId} paid via Bachs (₦${event.data?.amount || order.total}).`,
-          link: `/dashboard/orders`,
-          read: false,
-          metadata: { orderId },
-          createdAt: FieldValue.serverTimestamp(),
-        });
-      }
+    if (!order?.vendorId) return;
+
+    const vendorSnap = await db.collection("vendors").doc(order.vendorId).get();
+    const vendor = vendorSnap.data();
+    const ownerId = vendor?.ownerId as string | undefined;
+
+    if (ownerId) {
+      await db.collection("users").doc(ownerId).collection("notifications").add({
+        type: "order_placed",
+        title: "Payment received",
+        body: `Order ${order.orderNumber || orderId} paid via Bachs (₦${event.data?.amount || order.total}).`,
+        link: `/dashboard/orders`,
+        read: false,
+        metadata: { orderId },
+        createdAt: FieldValue.serverTimestamp(),
+      });
     }
+
+    const items = (order.items || []) as {
+      name: string;
+      quantity: number;
+      price: number;
+    }[];
+    const customer = (order.customer || {}) as {
+      name?: string;
+      email?: string;
+      phone?: string;
+    };
+
+    const emailPayload = {
+      orderNumber: String(order.orderNumber || orderId),
+      orderId,
+      vendorName: String(vendor?.businessName || order.vendorSlug || "Store"),
+      vendorSlug: String(order.vendorSlug || vendor?.slug || ""),
+      customerName: String(customer.name || "Customer"),
+      customerEmail: customer.email,
+      customerPhone: customer.phone,
+      items: items.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        price: i.price,
+      })),
+      total: Number(order.total || event.data?.amount || 0),
+      paymentStatus: "paid",
+    };
+
+    await Promise.all([
+      emailVendorPaymentReceived(vendor?.email as string | undefined, emailPayload),
+      emailCustomerOrder(customer.email, {
+        ...emailPayload,
+        paymentStatus: "paid",
+      }),
+    ]);
   } catch (e) {
-    console.error("[bachs-webhook] notification failed", e);
+    console.error("[bachs-webhook] notification / email failed", e);
   }
 }
 

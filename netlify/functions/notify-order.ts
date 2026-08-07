@@ -1,14 +1,9 @@
 /**
- * Netlify Function: notify vendor when an order is placed.
+ * Netlify Function: notify vendor when an order is placed (SendLib).
+ * Prefer Next.js routes in production; this remains as a Netlify alias.
  *
- * Email: wire your custom third-party provider here when ready.
- * For now this logs the event and returns a stub success so the client path works.
- *
- * Env (later):
- *   EMAIL_PROVIDER_API_KEY=
- *   EMAIL_PROVIDER_BASE_URL=
- *   EMAIL_FROM=
- *   FIREBASE_SERVICE_ACCOUNT= (optional, for server-side Firestore writes)
+ * Docs: https://sendlib.samueltuoyo.com/docs/send
+ * Env: SENDLIB_API_KEY (or EMAIL_PROVIDER_API_KEY), optional EMAIL_FROM
  */
 
 import type { Handler, HandlerEvent } from "@netlify/functions";
@@ -18,8 +13,14 @@ interface NotifyBody {
   orderNumber?: string;
   vendorId?: string;
   vendorEmail?: string;
+  vendorName?: string;
+  vendorSlug?: string;
   customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
   total?: number;
+  items?: { name: string; quantity: number; price: number }[];
+  paymentStatus?: string;
 }
 
 export const handler: Handler = async (event: HandlerEvent) => {
@@ -34,51 +35,89 @@ export const handler: Handler = async (event: HandlerEvent) => {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) };
   }
 
-  const { orderNumber, vendorEmail, customerName, total, vendorId, orderId } = body;
+  const apiKey = (
+    process.env.SENDLIB_API_KEY ||
+    process.env.EMAIL_PROVIDER_API_KEY ||
+    ""
+  ).trim();
+  const base = (
+    process.env.SENDLIB_BASE_URL ||
+    process.env.EMAIL_PROVIDER_BASE_URL ||
+    "https://sendlib.samueltuoyo.com"
+  ).replace(/\/$/, "");
 
-  console.log("[notify-order]", {
-    orderId,
-    orderNumber,
-    vendorId,
-    vendorEmail,
-    customerName,
-    total,
-  });
+  if (!apiKey) {
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ok: false,
+        emailSent: false,
+        error: "SENDLIB_API_KEY not configured",
+      }),
+    };
+  }
 
-  // --- Custom email provider integration point ---
-  // When you share your provider (API URL, auth, templates), we plug it in here.
-  // Example shape:
-  //
-  // if (process.env.EMAIL_PROVIDER_API_KEY && vendorEmail) {
-  //   await fetch(process.env.EMAIL_PROVIDER_BASE_URL + "/send", {
-  //     method: "POST",
-  //     headers: {
-  //       Authorization: `Bearer ${process.env.EMAIL_PROVIDER_API_KEY}`,
-  //       "Content-Type": "application/json",
-  //     },
-  //     body: JSON.stringify({
-  //       to: vendorEmail,
-  //       from: process.env.EMAIL_FROM,
-  //       subject: `New Kurospace order ${orderNumber}`,
-  //       html: `...`,
-  //     }),
-  //   });
-  // }
+  if (!body.vendorEmail) {
+    return {
+      statusCode: 200,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ok: false,
+        emailSent: false,
+        error: "vendorEmail required",
+      }),
+    };
+  }
 
-  const emailConfigured = Boolean(
-    process.env.EMAIL_PROVIDER_API_KEY && process.env.EMAIL_PROVIDER_BASE_URL
-  );
+  const total = body.total ?? 0;
+  const orderNumber = body.orderNumber || body.orderId || "order";
+  const subject = `New Kurospace order ${orderNumber}`;
+  const html = `<p>New order <strong>${orderNumber}</strong> from ${body.customerName || "a customer"}.</p>
+    <p>Total: ₦${Number(total).toLocaleString()}</p>
+    <p>Payment: ${body.paymentStatus || "pending"}</p>
+    <p>Manage in your Kurospace dashboard → Orders.</p>`;
 
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      ok: true,
-      emailSent: false,
-      emailConfigured,
-      message: emailConfigured
-        ? "Provider configured — complete the send() implementation with your API shape."
-        : "Stub notification logged. Share your email provider details to enable real emails.",
-    }),
+  const payload: Record<string, unknown> = {
+    to: body.vendorEmail,
+    subject,
+    html,
+    text: `New order ${orderNumber}. Total ₦${total}. Customer: ${body.customerName || ""}`,
   };
+  if (process.env.EMAIL_FROM || process.env.SENDLIB_FROM) {
+    payload.from = process.env.EMAIL_FROM || process.env.SENDLIB_FROM;
+  }
+
+  try {
+    const res = await fetch(`${base}/api/send`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+      },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json().catch(() => ({}));
+    return {
+      statusCode: res.ok ? 200 : res.status,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ok: res.ok,
+        emailSent: res.ok,
+        provider: "sendlib",
+        response: json,
+      }),
+    };
+  } catch (e) {
+    return {
+      statusCode: 500,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ok: false,
+        emailSent: false,
+        error: e instanceof Error ? e.message : "Send failed",
+      }),
+    };
+  }
 };

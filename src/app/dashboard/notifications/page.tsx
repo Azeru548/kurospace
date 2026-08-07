@@ -35,20 +35,31 @@ export default function NotificationsPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="h-5 w-5 text-teal-700" />
-            Email notifications
+            Email notifications (SendLib)
           </CardTitle>
           <CardDescription>
-            Ready for your custom provider — we will wire this via Netlify Functions when you share
-            API details (API key, endpoints, templates).
+            Powered by{" "}
+            <a
+              href="https://sendlib.samueltuoyo.com/docs/send"
+              className="text-teal-800 underline"
+              target="_blank"
+              rel="noreferrer"
+            >
+              SendLib
+            </a>
+            . Set <code className="text-xs">SENDLIB_API_KEY</code> on the server.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-slate-600">
-          <p>Planned triggers:</p>
+          <p>Live triggers:</p>
           <ul className="list-inside list-disc space-y-1 text-slate-700">
-            <li>New order placed (to vendor)</li>
-            <li>Order status updated (to customer, optional)</li>
-            <li>Welcome / store published (to vendor)</li>
+            <li>Checkout started → vendor + customer (payment pending)</li>
+            <li>Bachs payment confirmed → vendor + customer (paid)</li>
           </ul>
+          <p className="text-xs text-slate-500">
+            Emails go to the business email on your Settings page and the customer&apos;s checkout
+            email. Use a Gmail connected in SendLib as <code>EMAIL_FROM</code> if needed.
+          </p>
         </CardContent>
       </Card>
     </div>
