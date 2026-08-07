@@ -1,0 +1,76 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function vendorDoc(vendorId) {
+      return get(/databases/$(database)/documents/vendors/$(vendorId)).data;
+    }
+    function ownsVendor(vendorId) {
+      return signedIn() && vendorDoc(vendorId).ownerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+
+      match /notifications/{notifId} {
+        allow read, update: if isOwner(userId);
+        allow create: if signedIn(); // later restrict to admin/functions
+      }
+    }
+
+    match /vendors/{vendorId} {
+      allow read: if true; // public marketplace + storefronts
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update, delete: if ownsVendor(vendorId);
+    }
+
+    match /slugIndex/{slug} {
+      allow read: if true;
+      allow create: if signedIn();
+      allow update, delete: if signedIn()
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /catalog/{itemId} {
+      allow read: if true;
+      allow create: if signedIn()
+        && ownsVendor(request.resource.data.vendorId);
+      allow update, delete: if signedIn()
+        && ownsVendor(resource.data.vendorId);
+    }
+
+    match /orders/{orderId} {
+      // Anyone can place an order (storefront customers may be anonymous)
+      allow create: if true;
+      // Customers need to re-read their order on the success page
+      allow read: if true;
+      // Vendors update status; customers may attach bachsCheckoutId while pending
+      allow update: if signedIn() && ownsVendor(resource.data.vendorId)
+        || (
+          // Limited client attach of Bachs session fields before redirect
+          request.resource.data.diff(resource.data).changedKeys()
+            .hasOnly(['paymentMethod', 'paymentStatus', 'paymentRef', 'bachsCheckoutId', 'updatedAt'])
+          && request.resource.data.paymentMethod == 'bachs'
+          && request.resource.data.paymentStatus == 'pending'
+        );
+    }
+
+    // Written only by Admin SDK (webhooks) — deny clients
+    match /webhookEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    match /analyticsEvents/{eventId} {
+      allow create: if true;
+      allow read: if signedIn()
+        && ownsVendor(resource.data.vendorId);
+    }
+  }
+}
