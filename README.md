@@ -45,7 +45,8 @@ Vendors sign up, list products and services, manage orders from a dashboard, and
 | Layer | Technology |
 |--------|------------|
 | App | [Next.js 16](https://nextjs.org/) (App Router) + TypeScript + Tailwind CSS 4 |
-| Auth / DB / Storage | [Firebase](https://firebase.google.com/) Auth, Firestore, Storage |
+| Auth / DB | [Firebase](https://firebase.google.com/) Auth + Firestore (Spark-friendly) |
+| Images | [Cloudinary](https://cloudinary.com) free tier (no Firebase Storage / Blaze) |
 | Admin (server) | Firebase Admin SDK (webhooks, paid order updates) |
 | Payments | [Bachs](https://bachs.io) — hosted checkout redirect, pure NGN amount |
 | Serverless | Next.js Route Handlers + optional Netlify Functions |
@@ -227,10 +228,8 @@ Copy from `.env.example`.
 
 1. **Authentication** → Sign-in method → enable **Email/Password**
 2. **Firestore** → Create database
-3. **Storage** → Get started
-4. **Rules** → publish contents of:
-   - `firestore.rules`
-   - `storage.rules`
+3. **Rules** → publish `firestore.rules`  
+   *(Images use Cloudinary — you do **not** need Firebase Storage / Blaze.)*
 5. **Indexes** → import `firestore.indexes.json` or accept console prompts when queries fail
 6. **Service account** → Project settings → Service accounts → Generate key  
    - Local: place JSON in project root, set `FIREBASE_SERVICE_ACCOUNT_PATH=./your-file.json`  
@@ -239,6 +238,27 @@ Copy from `.env.example`.
 Without published Firestore rules, signup will fail after Auth succeeds with a permission error.
 
 ---
+
+## Images (Cloudinary)
+
+Firebase Storage is **not** used (often blocked or requires paid Blaze). Uploads go to **Cloudinary** free tier.
+
+1. Create a free account at [cloudinary.com](https://cloudinary.com)
+2. Dashboard → copy **Cloud name**
+3. **Settings → Upload → Add upload preset**
+   - **Signing mode: Unsigned**
+   - Optional folder: `kurospace`
+4. Add to `.env.local` (and Netlify):
+
+```env
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_unsigned_preset
+```
+
+5. Restart `npm run dev`
+
+Product, service, and logo uploads store under  
+`kurospace/vendors/{vendorId}/catalog|logo|...` and return a public `secure_url`.
 
 ## Bachs payments
 

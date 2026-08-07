@@ -110,7 +110,11 @@ export function CatalogManager({ type, title, description }: Props) {
       }
       setImages((prev) => [...prev, ...urls].slice(0, 8));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Image upload failed. Check Firebase Storage rules.");
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Image upload failed. Check Cloudinary env (NEXT_PUBLIC_CLOUDINARY_*)."
+      );
     } finally {
       setUploading(false);
     }

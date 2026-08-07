@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+      {
+        protocol: "https",
         hostname: "firebasestorage.googleapis.com",
       },
       {
@@ -17,7 +21,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  transpilePackages: ["firebase", "@firebase/firestore", "@firebase/auth", "@firebase/storage"],
+  transpilePackages: ["firebase", "@firebase/firestore", "@firebase/auth"],
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
