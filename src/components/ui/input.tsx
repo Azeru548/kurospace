@@ -38,9 +38,10 @@ export function Input({ className, label, error, hint, id, ...props }: InputProp
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
   error?: string;
+  hint?: string;
 }
 
-export function Textarea({ className, label, error, id, ...props }: TextareaProps) {
+export function Textarea({ className, label, error, hint, id, ...props }: TextareaProps) {
   const inputId = id || props.name;
   return (
     <div className="space-y-1.5">
@@ -58,6 +59,7 @@ export function Textarea({ className, label, error, id, ...props }: TextareaProp
         )}
         {...props}
       />
+      {hint && !error && <p className="text-xs text-slate-500">{hint}</p>}
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );

@@ -11,8 +11,9 @@ import {
   type VendorBranding,
 } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Input, Select } from "@/components/ui/input";
+import { Input, Select, Textarea } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { brandVars, themeClassName } from "@/lib/store-theme";
 
 export default function StorefrontPage() {
   const { vendor, refreshVendor } = useAuth();
@@ -147,6 +148,15 @@ export default function StorefrontPage() {
                 Show cover banner
               </label>
 
+              <Textarea
+                label="Custom CSS"
+                value={branding.customCss || ""}
+                onChange={(e) => set("customCss", e.target.value)}
+                placeholder=".store-card { border-radius: 20px; }"
+                hint="Optional. Applies to your whole storefront. Use the .store-* classes to target cards, buttons, and headings."
+                className="min-h-[120px] font-mono text-xs"
+              />
+
               {message && (
                 <p className="rounded-lg bg-teal-50 px-3 py-2 text-sm text-teal-900">{message}</p>
               )}
@@ -165,12 +175,8 @@ export default function StorefrontPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div
-              className="min-h-[420px] p-5"
-              style={{
-                background: branding.backgroundColor,
-                color: branding.textColor,
-                fontFamily: branding.fontFamily,
-              }}
+              className={`min-h-[420px] p-5 ${themeClassName(branding)}`}
+              style={brandVars(branding)}
             >
               {branding.showCover && (
                 <div
@@ -191,15 +197,15 @@ export default function StorefrontPage() {
                 )}
                 <div>
                   <h2
-                    className="text-lg font-bold"
+                    className="store-heading text-lg"
                     style={{ fontFamily: branding.headingFont || branding.fontFamily }}
                   >
                     {vendor.businessName}
                   </h2>
-                  <p className="text-xs opacity-70">{vendor.category}</p>
+                  <p className="store-muted text-xs opacity-70">{vendor.category}</p>
                 </div>
               </div>
-              <p className="mb-4 text-sm opacity-80 line-clamp-2">
+              <p className="store-muted mb-4 text-sm opacity-80 line-clamp-2">
                 {vendor.description || "Your business description will appear here."}
               </p>
               <div
@@ -213,7 +219,7 @@ export default function StorefrontPage() {
                   (name, i) => (
                     <div
                       key={name}
-                      className="rounded-lg border p-3"
+                      className="store-card p-3"
                       style={{ borderColor: `${branding.primaryColor}33` }}
                     >
                       <div
@@ -225,8 +231,11 @@ export default function StorefrontPage() {
                               : `${branding.accentColor}33`,
                         }}
                       />
-                      <p className="text-xs font-medium">{name}</p>
-                      <p className="text-xs font-semibold" style={{ color: branding.primaryColor }}>
+                      <p className="store-heading text-xs font-medium">{name}</p>
+                      <p
+                        className="store-heading text-xs font-semibold"
+                        style={{ color: branding.primaryColor }}
+                      >
                         ₦{(i + 1) * 10000}
                       </p>
                     </div>
@@ -235,7 +244,7 @@ export default function StorefrontPage() {
               </div>
               <button
                 type="button"
-                className="mt-4 w-full rounded-lg py-2 text-sm font-medium text-white"
+                className="store-btn-primary mt-4 w-full py-2 text-sm font-medium text-white"
                 style={{ background: branding.primaryColor }}
               >
                 Place order

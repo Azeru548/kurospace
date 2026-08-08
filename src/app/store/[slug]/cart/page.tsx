@@ -7,10 +7,12 @@ import { getVendorBySlug } from "@/lib/firebase/vendors";
 import { formatNaira } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
 import { CheckoutDialog } from "@/components/storefront/checkout-dialog";
+import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Minus, Plus, ShoppingBag, Store, Trash2 } from "lucide-react";
 import type { Vendor } from "@/types";
+import { DEFAULT_BRANDING } from "@/types";
 
 export default function StoreCartPage() {
   const params = useParams();
@@ -72,23 +74,27 @@ export default function StoreCartPage() {
 
   const cartBelongsToOtherStore = Boolean(vendorSlug && vendorSlug !== slug);
   const empty = lines.length === 0;
+  const branding = { ...DEFAULT_BRANDING, ...vendor.branding };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+    <StorefrontShell vendor={vendor}>
+      <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link
             href={`/store/${vendor.slug}`}
-            className="flex items-center gap-2 text-sm text-slate-600 hover:text-teal-800"
+            className="store-muted flex items-center gap-2 text-sm hover:opacity-80"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to {vendor.businessName}
           </Link>
-          <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <span className="flex items-center gap-2 text-sm font-medium">
             <ShoppingBag className="h-4 w-4" />
             Cart
             {count > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-slate-900">
+              <span
+                className="flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
+                style={{ background: branding.accentColor, color: "#0f172a" }}
+              >
                 {count}
               </span>
             )}
@@ -111,24 +117,26 @@ export default function StoreCartPage() {
             </Button>
           </div>
         ) : empty ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-16 text-center">
+          <div className="store-card flex flex-col items-center justify-center bg-white px-6 py-16 text-center">
             <Store className="h-12 w-12 text-slate-300" />
-            <h1 className="mt-3 text-lg font-semibold text-slate-900">Your cart is empty</h1>
-            <p className="mt-1 max-w-sm text-sm text-slate-600">
+            <h1 className="store-heading mt-3 text-lg">Your cart is empty</h1>
+            <p className="store-muted mt-1 max-w-sm text-sm">
               Browse {vendor.businessName}&apos;s catalog and add something you like.
             </p>
             <Link href={`/store/${vendor.slug}`}>
-              <Button className="mt-5">Continue shopping</Button>
+              <Button className="mt-5" style={{ background: branding.primaryColor }}>
+                Continue shopping
+              </Button>
             </Link>
           </div>
         ) : (
           <>
-            <h1 className="mb-5 text-2xl font-bold text-slate-900">Your cart</h1>
+            <h1 className="store-heading mb-5 text-2xl">Your cart</h1>
             <ul className="space-y-3">
               {lines.map((line) => (
                 <li
                   key={line.item.id}
-                  className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-4"
+                  className="store-card flex gap-4 bg-white p-4"
                 >
                   <Link
                     href={`/store/${vendor.slug}/product/${line.item.id}`}
@@ -148,11 +156,11 @@ export default function StoreCartPage() {
                       <div className="min-w-0">
                         <Link
                           href={`/store/${vendor.slug}/product/${line.item.id}`}
-                          className="line-clamp-1 text-sm font-semibold text-slate-900 hover:text-teal-800"
+                          className="store-heading line-clamp-1 text-sm hover:opacity-80"
                         >
                           {line.item.name}
                         </Link>
-                        <p className="mt-0.5 text-xs text-slate-500">
+                        <p className="store-muted mt-0.5 text-xs">
                           {formatNaira(line.item.price)} each
                         </p>
                       </div>
@@ -169,19 +177,19 @@ export default function StoreCartPage() {
                       <div className="flex items-center rounded-lg border border-slate-300">
                         <button
                           type="button"
-                          className="p-2 text-slate-600 hover:text-teal-800 disabled:opacity-40"
+                          className="p-2 text-slate-600 hover:opacity-80 disabled:opacity-40"
                           onClick={() => setQuantity(line.item.id, line.quantity - 1)}
                           disabled={line.quantity <= 1}
                           aria-label="Decrease quantity"
                         >
                           <Minus className="h-3.5 w-3.5" />
                         </button>
-                        <span className="w-8 text-center text-sm font-semibold text-slate-900">
+                        <span className="w-8 text-center text-sm font-semibold">
                           {line.quantity}
                         </span>
                         <button
                           type="button"
-                          className="p-2 text-slate-600 hover:text-teal-800 disabled:opacity-40"
+                          className="p-2 text-slate-600 hover:opacity-80 disabled:opacity-40"
                           onClick={() => setQuantity(line.item.id, line.quantity + 1)}
                           disabled={line.quantity >= 99}
                           aria-label="Increase quantity"
@@ -192,7 +200,7 @@ export default function StoreCartPage() {
                       <Badge variant="teal" className="capitalize">
                         {line.item.type}
                       </Badge>
-                      <p className="text-sm font-bold text-teal-800">
+                      <p className="text-sm font-bold" style={{ color: branding.primaryColor }}>
                         {formatNaira(line.item.price * line.quantity)}
                       </p>
                     </div>
@@ -201,19 +209,23 @@ export default function StoreCartPage() {
               ))}
             </ul>
 
-            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex items-center justify-between text-sm text-slate-600">
+            <div className="store-card mt-5 bg-white p-5">
+              <div className="store-muted flex items-center justify-between text-sm">
                 <span>Subtotal</span>
                 <span>{formatNaira(total)}</span>
               </div>
-              <div className="mt-1 flex items-center justify-between text-base font-bold text-slate-900">
+              <div className="mt-1 flex items-center justify-between text-base font-bold">
                 <span>Total</span>
                 <span>{formatNaira(total)}</span>
               </div>
-              <Button className="mt-4 w-full" onClick={() => setCheckoutOpen(true)}>
+              <Button
+                className="store-btn-primary mt-4 w-full"
+                onClick={() => setCheckoutOpen(true)}
+                style={{ background: branding.primaryColor }}
+              >
                 Proceed to checkout
               </Button>
-              <p className="mt-3 text-center text-xs text-slate-500">
+              <p className="store-muted mt-3 text-center text-xs">
                 You&apos;ll enter delivery details and pay securely with Bachs on the next step.
               </p>
             </div>
@@ -222,6 +234,6 @@ export default function StoreCartPage() {
       </main>
 
       <CheckoutDialog vendor={vendor} open={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
-    </div>
+    </StorefrontShell>
   );
 }

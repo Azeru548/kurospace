@@ -8,10 +8,12 @@ import { getVendorBySlug } from "@/lib/firebase/vendors";
 import { formatNaira } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
 import { CheckoutDialog } from "@/components/storefront/checkout-dialog";
+import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Minus, Plus, Store } from "lucide-react";
 import type { CatalogItem, Vendor } from "@/types";
+import { DEFAULT_BRANDING } from "@/types";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -97,30 +99,35 @@ export default function ProductDetailPage() {
 
   const desc = item.description || item.shortDescription;
   const images = item.images.length ? item.images : [];
+  const branding = { ...DEFAULT_BRANDING, ...vendor.branding };
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <StorefrontShell vendor={vendor}>
       {/* Slim storefront-style header so the product page keeps vendor context */}
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white">
+      <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href={`/store/${vendor.slug}`} className="flex items-center gap-2 text-sm text-slate-600 hover:text-teal-800">
+          <Link href={`/store/${vendor.slug}`} className="store-muted flex items-center gap-2 text-sm hover:opacity-80">
             ← Back to {vendor.businessName}
           </Link>
           <div className="flex items-center gap-3">
             <Link
               href={`/store/${vendor.slug}`}
-              className="text-sm font-medium text-slate-600 hover:text-teal-800"
+              className="store-muted text-sm font-medium hover:opacity-80"
             >
               View store
             </Link>
             <Link
               href={`/store/${vendor.slug}/cart`}
-              className="relative flex items-center gap-2 rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800"
+              className="store-btn-primary relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white"
+              style={{ background: branding.primaryColor }}
             >
               <Store className="h-4 w-4" />
               Cart
               {count > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-slate-900">
+                <span
+                  className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
+                  style={{ background: branding.accentColor, color: "#0f172a" }}
+                >
                   {count}
                 </span>
               )}
@@ -133,7 +140,7 @@ export default function ProductDetailPage() {
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Image gallery */}
           <div>
-            <div className="aspect-[3/4] overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="store-card aspect-[3/4] overflow-hidden bg-white">
               {images[activeImage] ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -155,7 +162,7 @@ export default function ProductDetailPage() {
                     type="button"
                     onClick={() => setActiveImage(i)}
                     className={`h-20 w-16 overflow-hidden rounded-lg border-2 transition ${
-                      i === activeImage ? "border-teal-700" : "border-slate-200 hover:border-slate-300"
+                      i === activeImage ? "border-slate-700" : "border-slate-200 hover:border-slate-300"
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -175,10 +182,17 @@ export default function ProductDetailPage() {
               {item.category ? <Badge variant="teal">{item.category}</Badge> : null}
             </div>
 
-            <h1 className="text-3xl font-bold text-slate-900">{item.name}</h1>
+            <h1
+              className="store-heading text-3xl"
+              style={{ fontFamily: branding.headingFont || branding.fontFamily }}
+            >
+              {item.name}
+            </h1>
 
             <div>
-              <p className="text-2xl font-bold text-teal-800">{formatNaira(item.price)}</p>
+              <p className="text-2xl font-bold" style={{ color: branding.primaryColor }}>
+                {formatNaira(item.price)}
+              </p>
               {item.compareAtPrice != null && item.compareAtPrice > item.price && (
                 <p className="text-sm text-slate-400 line-through">
                   {formatNaira(item.compareAtPrice)}
@@ -187,23 +201,23 @@ export default function ProductDetailPage() {
             </div>
 
             {desc && (
-              <div className="prose-sm max-w-none whitespace-pre-line text-slate-700">
+              <div className="store-muted prose-sm max-w-none whitespace-pre-line">
                 <p className="leading-relaxed">{desc}</p>
               </div>
             )}
 
             {/* Service-specific info */}
             {item.type === "service" && (
-              <dl className="grid grid-cols-2 gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm">
+              <dl className="store-card grid grid-cols-2 gap-3 bg-white p-4 text-sm">
                 {item.durationMinutes ? (
                   <div>
-                    <dt className="text-xs uppercase text-slate-500">Duration</dt>
-                    <dd className="font-medium text-slate-900">{item.durationMinutes} min</dd>
+                    <dt className="text-xs uppercase opacity-50">Duration</dt>
+                    <dd className="font-medium">{item.durationMinutes} min</dd>
                   </div>
                 ) : null}
                 <div>
-                  <dt className="text-xs uppercase text-slate-500">Booking</dt>
-                  <dd className="font-medium text-slate-900">
+                  <dt className="text-xs uppercase opacity-50">Booking</dt>
+                  <dd className="font-medium">
                     {item.bookingRequired ? "Required" : "On demand"}
                   </dd>
                 </div>
@@ -212,7 +226,7 @@ export default function ProductDetailPage() {
 
             {/* Product-specific info */}
             {item.type === "product" && item.stock != null && (
-              <p className="text-sm text-slate-600">
+              <p className="store-muted text-sm">
                 {item.stock > 0 ? `${item.stock} in stock` : "Out of stock"}
               </p>
             )}
@@ -222,19 +236,17 @@ export default function ProductDetailPage() {
               <div className="flex items-center rounded-lg border border-slate-300 bg-white">
                 <button
                   type="button"
-                  className="p-2.5 text-slate-600 hover:text-teal-800 disabled:opacity-40"
+                  className="p-2.5 text-slate-600 hover:opacity-80 disabled:opacity-40"
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
                   aria-label="Decrease quantity"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-10 text-center text-sm font-semibold text-slate-900">
-                  {quantity}
-                </span>
+                <span className="w-10 text-center text-sm font-semibold">{quantity}</span>
                 <button
                   type="button"
-                  className="p-2.5 text-slate-600 hover:text-teal-800 disabled:opacity-40"
+                  className="p-2.5 text-slate-600 hover:opacity-80 disabled:opacity-40"
                   onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                   disabled={quantity >= 99}
                   aria-label="Increase quantity"
@@ -251,9 +263,12 @@ export default function ProductDetailPage() {
             {/* Vendor card */}
             <Link
               href={`/store/${vendor.slug}`}
-              className="mt-2 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-teal-200 hover:shadow-sm"
+              className="store-card mt-2 flex items-center gap-3 bg-white p-4 transition hover:shadow-md"
             >
-              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-teal-700 text-lg font-bold text-white">
+              <div
+                className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg text-lg font-bold text-white"
+                style={{ background: branding.primaryColor }}
+              >
                 {vendor.logoURL ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={vendor.logoURL} alt="" className="h-full w-full object-cover" />
@@ -262,20 +277,22 @@ export default function ProductDetailPage() {
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-slate-900">{vendor.businessName}</p>
-                <p className="flex items-center gap-1 truncate text-xs text-slate-500">
+                <p className="store-heading text-sm font-semibold">{vendor.businessName}</p>
+                <p className="store-muted flex items-center gap-1 truncate text-xs">
                   <MapPin className="h-3 w-3 shrink-0" />
                   {[vendor.address?.city, vendor.address?.state].filter(Boolean).join(", ") ||
                     vendor.category}
                 </p>
               </div>
-              <span className="ml-auto text-xs font-medium text-teal-800">Visit store →</span>
+              <span className="ml-auto text-xs font-medium" style={{ color: branding.primaryColor }}>
+                Visit store →
+              </span>
             </Link>
           </div>
         </div>
       </main>
 
       <CheckoutDialog vendor={vendor} open={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
-    </div>
+    </StorefrontShell>
   );
 }

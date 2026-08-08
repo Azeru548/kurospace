@@ -6,6 +6,7 @@ import { DEFAULT_BRANDING } from "@/types";
 import { formatNaira } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
 import { Badge } from "@/components/ui/badge";
+import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { ShoppingBag } from "lucide-react";
 
 export function StorefrontView({
@@ -26,14 +27,7 @@ export function StorefrontView({
         : "grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4";
 
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: branding.backgroundColor,
-        color: branding.textColor,
-        fontFamily: branding.fontFamily,
-      }}
-    >
+    <StorefrontShell vendor={vendor}>
       {branding.showCover && (
         <div
           className="h-40 sm:h-56"
@@ -62,8 +56,11 @@ export function StorefrontView({
           )}
           <div>
             <h1
-              className="text-xl font-bold sm:text-2xl"
-              style={{ fontFamily: branding.headingFont || branding.fontFamily }}
+              className="store-heading text-xl sm:text-2xl"
+              style={{
+                color: branding.textColor,
+                fontFamily: branding.headingFont || branding.fontFamily,
+              }}
             >
               {vendor.businessName}
             </h1>
@@ -77,7 +74,7 @@ export function StorefrontView({
         </div>
         <Link
           href={`/store/${vendor.slug}/cart`}
-          className="relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white"
+          className="store-btn-primary relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white"
           style={{ background: branding.primaryColor }}
         >
           <ShoppingBag className="h-4 w-4" />
@@ -95,7 +92,9 @@ export function StorefrontView({
 
       <main className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
         {vendor.description && (
-          <p className="mb-8 max-w-2xl text-sm opacity-80 sm:text-base">{vendor.description}</p>
+          <p className="store-muted mb-8 max-w-2xl text-sm opacity-80 sm:text-base">
+            {vendor.description}
+          </p>
         )}
 
         {items.length === 0 ? (
@@ -111,8 +110,8 @@ export function StorefrontView({
                   key={item.id}
                   className={
                     isList
-                      ? "flex gap-4 overflow-hidden rounded-xl border p-3 sm:p-4"
-                      : "group flex flex-col overflow-hidden rounded-xl border transition hover:shadow-md"
+                      ? "store-card flex gap-4 overflow-hidden p-3 sm:p-4"
+                      : "store-card group flex flex-col overflow-hidden transition hover:shadow-md"
                   }
                   style={{ borderColor: `${branding.primaryColor}22` }}
                 >
@@ -151,7 +150,7 @@ export function StorefrontView({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <Link href={`/store/${vendor.slug}/product/${item.id}`}>
-                        <h2 className="line-clamp-2 text-sm font-semibold leading-snug hover:opacity-80 sm:text-[15px]">
+                        <h2 className="store-heading line-clamp-2 text-sm leading-snug hover:opacity-80 sm:text-[15px]">
                           {item.name}
                         </h2>
                       </Link>
@@ -162,7 +161,9 @@ export function StorefrontView({
                       )}
                     </div>
                     {desc && (
-                      <p className="line-clamp-2 text-xs opacity-70 sm:line-clamp-3">{desc}</p>
+                      <p className="store-muted line-clamp-2 text-xs opacity-70 sm:line-clamp-3">
+                        {desc}
+                      </p>
                     )}
                     <div
                       className={
@@ -187,7 +188,7 @@ export function StorefrontView({
                       <button
                         type="button"
                         onClick={() => addItem(item, vendor.id, vendor.slug)}
-                        className="rounded-lg px-3 py-2 text-xs font-medium text-white sm:text-sm"
+                        className="store-btn-primary rounded-lg px-3 py-2 text-xs font-medium text-white sm:text-sm"
                         style={{ background: branding.primaryColor }}
                       >
                         Add to cart
@@ -200,10 +201,10 @@ export function StorefrontView({
           </div>
         )}
 
-        <p className="mt-12 text-center text-xs opacity-40">
+        <p className="store-muted mt-12 text-center text-xs opacity-40">
           Powered by Kurospace · {vendor.slug}.kurospace.com
         </p>
       </main>
-    </div>
+    </StorefrontShell>
   );
 }

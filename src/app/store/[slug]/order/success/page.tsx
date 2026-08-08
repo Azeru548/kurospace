@@ -7,8 +7,10 @@ import { getOrder } from "@/lib/firebase/orders";
 import { getVendorBySlug } from "@/lib/firebase/vendors";
 import { formatNaira } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
+import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { CheckCircle2, Mail, MapPin, Phone, Store } from "lucide-react";
 import type { CustomerInfo, OrderItem, Vendor } from "@/types";
+import { DEFAULT_BRANDING } from "@/types";
 
 function SuccessContent() {
   const params = useParams();
@@ -86,17 +88,35 @@ function SuccessContent() {
     { icon: MapPin, label: vendor?.whatsapp },
   ].filter((c) => c.label);
 
+  const branding = vendor ? { ...DEFAULT_BRANDING, ...vendor.branding } : DEFAULT_BRANDING;
+
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50 px-4 py-10">
-      <div className="mx-auto w-full max-w-2xl">
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+    <StorefrontShell
+      vendor={
+        vendor ?? {
+          id: "",
+          ownerId: "",
+          slug,
+          businessName: "Store",
+          category: "Store",
+          branding,
+          plan: "free",
+          storefrontEnabled: true,
+          isPublished: true,
+          createdAt: null,
+          updatedAt: null,
+        }
+      }
+    >
+      <div className="mx-auto w-full max-w-2xl px-4 py-10">
+        <div className="store-card bg-white p-8 text-center shadow-sm">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
             <CheckCircle2 className="h-8 w-8" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900">
+          <h1 className="store-heading text-xl">
             {status === "paid" ? "Payment successful" : "Order received"}
           </h1>
-          <p className="mt-2 text-sm text-slate-600">
+          <p className="store-muted mt-2 text-sm">
             {status === "paid"
               ? "Bachs confirmed your payment. The vendor has been notified."
               : status === "pending"
@@ -106,19 +126,21 @@ function SuccessContent() {
                   : "Thanks for your order. If you paid, confirmation may take a moment."}
           </p>
           {orderNumber && (
-            <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 font-mono text-sm text-slate-800">
+            <p className="store-card mt-4 rounded-lg bg-slate-50 px-3 py-2 font-mono text-sm">
               {orderNumber}
               {total != null ? ` · ${formatNaira(total)}` : ""}
             </p>
           )}
           {checkoutId && (
-            <p className="mt-2 text-xs text-slate-400">Checkout: {checkoutId}</p>
+            <p className="store-muted mt-2 text-xs opacity-60">Checkout: {checkoutId}</p>
           )}
         </div>
 
         {items.length > 0 && (
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6">
-            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Order summary</h2>
+          <div className="store-card mt-4 bg-white p-6">
+            <h2 className="store-muted text-sm font-bold uppercase tracking-wide">
+              Order summary
+            </h2>
             <ul className="mt-4 space-y-3">
               {items.map((it) => (
                 <li key={it.catalogItemId} className="flex items-center justify-between gap-3">
@@ -136,17 +158,17 @@ function SuccessContent() {
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-slate-900">{it.name}</p>
-                      <p className="text-xs text-slate-500 capitalize">{it.type} · ×{it.quantity}</p>
+                      <p className="store-heading truncate text-sm">{it.name}</p>
+                      <p className="store-muted text-xs capitalize">
+                        {it.type} · ×{it.quantity}
+                      </p>
                     </div>
                   </div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {formatNaira(it.price * it.quantity)}
-                  </p>
+                  <p className="text-sm font-semibold">{formatNaira(it.price * it.quantity)}</p>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-base font-bold text-slate-900">
+            <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4 text-base font-bold">
               <span>Total</span>
               <span>{total != null ? formatNaira(total) : "—"}</span>
             </div>
@@ -155,28 +177,35 @@ function SuccessContent() {
 
         {customer && (
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6">
-              <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Delivery details</h2>
-              <p className="mt-3 text-sm font-medium text-slate-900">{customer.name}</p>
-              {customer.phone && <p className="text-sm text-slate-600">{customer.phone}</p>}
-              {customer.email && <p className="text-sm text-slate-600">{customer.email}</p>}
+            <div className="store-card bg-white p-6">
+              <h2 className="store-muted text-sm font-bold uppercase tracking-wide">
+                Delivery details
+              </h2>
+              <p className="store-heading mt-3 text-sm">{customer.name}</p>
+              {customer.phone && <p className="store-muted text-sm">{customer.phone}</p>}
+              {customer.email && <p className="store-muted text-sm">{customer.email}</p>}
               {(customer.address || customer.city || customer.state) && (
-                <p className="mt-2 text-sm text-slate-600">
+                <p className="store-muted mt-2 text-sm">
                   {[customer.address, customer.city, customer.state].filter(Boolean).join(", ")}
                 </p>
               )}
               {customer.notes && (
-                <p className="mt-2 rounded-lg bg-slate-50 p-2 text-xs text-slate-500">
+                <p className="store-muted mt-2 rounded-lg bg-slate-50 p-2 text-xs">
                   Notes: {customer.notes}
                 </p>
               )}
             </div>
 
             {vendor && (
-              <div className="rounded-2xl border border-slate-200 bg-white p-6">
-                <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">Vendor contact</h2>
+              <div className="store-card bg-white p-6">
+                <h2 className="store-muted text-sm font-bold uppercase tracking-wide">
+                  Vendor contact
+                </h2>
                 <div className="mt-3 flex items-center gap-2">
-                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-teal-700 text-sm font-bold text-white">
+                  <div
+                    className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg text-sm font-bold text-white"
+                    style={{ background: branding.primaryColor }}
+                  >
                     {vendor.logoURL ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={vendor.logoURL} alt="" className="h-full w-full object-cover" />
@@ -185,14 +214,14 @@ function SuccessContent() {
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-900">{vendor.businessName}</p>
-                    <p className="text-xs text-slate-500">{vendor.category}</p>
+                    <p className="store-heading text-sm">{vendor.businessName}</p>
+                    <p className="store-muted text-xs">{vendor.category}</p>
                   </div>
                 </div>
                 {[vendor.address?.street, vendor.address?.city, vendor.address?.state]
                   .filter(Boolean)
                   .length > 0 && (
-                  <p className="mt-2 flex items-center gap-1 text-sm text-slate-600">
+                  <p className="store-muted mt-2 flex items-center gap-1 text-sm">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     {[vendor.address?.street, vendor.address?.city, vendor.address?.state]
                       .filter(Boolean)
@@ -200,7 +229,7 @@ function SuccessContent() {
                   </p>
                 )}
                 {contact.map((c) => (
-                  <p key={c.label} className="mt-1 flex items-center gap-1 text-sm text-slate-600">
+                  <p key={c.label} className="store-muted mt-1 flex items-center gap-1 text-sm">
                     <c.icon className="h-3.5 w-3.5 shrink-0" />
                     <span className="break-all">{c.label}</span>
                   </p>
@@ -213,16 +242,20 @@ function SuccessContent() {
         <div className="mt-6 flex flex-col items-center gap-2">
           <Link
             href={`/store/${slug}`}
-            className="w-full rounded-lg bg-teal-700 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-teal-800 sm:w-auto"
+            className="store-btn-primary w-full rounded-lg px-4 py-2.5 text-center text-sm font-medium text-white sm:w-auto"
+            style={{ background: branding.primaryColor }}
           >
             Back to store
           </Link>
-          <Link href="/marketplace" className="text-sm text-teal-800 hover:underline">
+          <Link
+            href="/marketplace"
+            className="store-muted text-sm hover:opacity-80"
+          >
             Browse marketplace
           </Link>
         </div>
       </div>
-    </div>
+    </StorefrontShell>
   );
 }
 
