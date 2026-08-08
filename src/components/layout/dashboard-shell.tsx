@@ -40,6 +40,41 @@ function ShellSpinner() {
   );
 }
 
+function NavLinks({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  return (
+    <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
+      {nav.map((item) => {
+        const active =
+          pathname === item.href ||
+          (item.href !== "/dashboard" && pathname.startsWith(item.href));
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              active
+                ? "bg-teal-50 text-teal-900"
+                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            )}
+          >
+            <Icon className="h-4 w-4 shrink-0" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -75,33 +110,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     router.push("/");
   }
 
-  const NavLinks = () => (
-    <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
-      {nav.map((item) => {
-        const active =
-          pathname === item.href ||
-          (item.href !== "/dashboard" && pathname.startsWith(item.href));
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setOpen(false)}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-              active
-                ? "bg-teal-50 text-teal-900"
-                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-            )}
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            {item.label}
-          </Link>
-        );
-      })}
-    </nav>
-  );
-
   return (
     <div className="flex min-h-screen bg-slate-50">
       {/* Desktop sidebar */}
@@ -117,7 +125,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </p>
           </div>
         </div>
-        <NavLinks />
+        <NavLinks pathname={pathname} />
         <div className="border-t border-slate-100 p-3 space-y-2">
           {storeUrl && (
             <a
@@ -152,7 +160,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <NavLinks />
+            <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
           </aside>
         </div>
       )}

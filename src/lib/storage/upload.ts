@@ -77,5 +77,6 @@ export async function uploadVendorImage(
 /** Best-effort delete — unsigned presets often cannot delete; no-op is fine for MVP. */
 export async function deleteStorageURL(_url: string): Promise<void> {
   // Cloudinary destroy requires API secret (server-side). Skip on free client flow.
+  void _url;
   return;
 }

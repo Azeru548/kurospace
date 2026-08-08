@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     } catch (e) {
       console.error("Auth init failed", e);
-      setLoading(false);
+      void Promise.resolve().then(() => setLoading(false));
     }
     return () => unsub();
   }, [loadSecondary]);

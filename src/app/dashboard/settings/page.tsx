@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { updateVendor } from "@/lib/firebase/vendors";
 import { uploadVendorImage } from "@/lib/firebase/storage";
@@ -26,9 +26,10 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [logoUploading, setLogoUploading] = useState(false);
+  const [syncedVendorId, setSyncedVendorId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!vendor) return;
+  if (vendor && vendor.id !== syncedVendorId) {
+    setSyncedVendorId(vendor.id);
     setForm({
       businessName: vendor.businessName,
       description: vendor.description ?? "",
@@ -40,7 +41,7 @@ export default function SettingsPage() {
       state: vendor.address?.state ?? "Lagos",
       isPublished: vendor.isPublished,
     });
-  }, [vendor]);
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

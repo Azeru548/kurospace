@@ -13,15 +13,15 @@ function SuccessContent() {
   const slug = String(params.slug || "");
   const orderId = search.get("order_id") || "";
   const checkoutId = search.get("checkout_id") || "";
-  const [status, setStatus] = useState<"loading" | "paid" | "pending" | "missing">("loading");
+  const initialStatus = orderId ? "loading" : "missing";
+  const [status, setStatus] = useState<"loading" | "paid" | "pending" | "missing">(
+    initialStatus
+  );
   const [orderNumber, setOrderNumber] = useState("");
   const [total, setTotal] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!orderId) {
-      setStatus("missing");
-      return;
-    }
+    if (!orderId) return;
     let cancelled = false;
     let tries = 0;
 

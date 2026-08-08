@@ -27,7 +27,6 @@ export default function OrdersPage() {
 
   async function load() {
     if (!vendor) return;
-    setLoading(true);
     try {
       setOrders(await listVendorOrders(vendor.id));
     } catch (e) {
@@ -38,7 +37,21 @@ export default function OrdersPage() {
   }
 
   useEffect(() => {
-    load();
+    if (!vendor) return;
+    let cancelled = false;
+    listVendorOrders(vendor.id)
+      .then((data) => {
+        if (!cancelled) setOrders(data);
+      })
+      .catch((e) => {
+        console.error(e);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendor?.id]);
 

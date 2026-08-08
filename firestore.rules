@@ -47,8 +47,26 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      // Anyone can place an order (storefront customers may be anonymous)
-      allow create: if true;
+      // Anyone can place an order (storefront customers may be anonymous),
+      // but only with a well-formed order payload to limit spam writes.
+      allow create: if request.resource.data.keys().hasAll([
+            'vendorId', 'orderNumber', 'items', 'customer', 'status',
+            'subtotal', 'total', 'currency', 'paymentMethod', 'paymentStatus', 'source'
+          ])
+          && request.resource.data.items is list
+          && request.resource.data.items.size() > 0
+          && request.resource.data.items.size() <= 50
+          && request.resource.data.total is number
+          && request.resource.data.total > 0
+          && request.resource.data.currency == 'NGN'
+          && request.resource.data.status == 'pending'
+          && request.resource.data.source in ['storefront', 'marketplace', 'manual']
+          && request.resource.data.paymentMethod in ['bachs', 'bank_transfer', 'manual', 'other']
+          && request.resource.data.customer is map
+          && request.resource.data.customer.name is string
+          && request.resource.data.customer.name.size() > 0
+          && request.resource.data.customer.phone is string
+          && request.resource.data.customer.phone.size() > 0;
       // Customers need to re-read their order on the success page
       allow read: if true;
       // Vendors update status; customers may attach bachsCheckoutId while pending

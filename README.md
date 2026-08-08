@@ -52,7 +52,7 @@ Vendors sign up, list products and services, manage orders from a dashboard, and
 | Serverless | Next.js Route Handlers + optional Netlify Functions |
 | Hosting | [Netlify](https://www.netlify.com/) (`@netlify/plugin-nextjs`) |
 
-> **Note on local speed:** On some Windows machines Next falls back to WASM SWC and uses `next dev --webpack`. That makes **local** first compiles slow. **Production on Netlify is a pre-built app** and does not behave like that.
+> **Note on local speed:** On some Windows machines Next falls back to WASM SWC. Turbopack is the default (`npm run dev`); if first compiles are slow, use `npm run dev:webpack`. **Production on Netlify is a pre-built app** and does not behave like that.
 
 ---
 
@@ -295,7 +295,8 @@ Docs: [docs.bachs.io](https://docs.bachs.io)
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Dev server (webpack mode for this repo) |
+| `npm run dev` | Dev server (Turbopack) |
+| `npm run dev:webpack` | Dev server fallback (webpack) |
 | `npm run build` | Production build |
 | `npm run start` | Serve production build locally (closest to Netlify speed) |
 | `npm run lint` | ESLint |
@@ -350,14 +351,14 @@ Requires DNS wildcard (`*.kurospace.com`) and Netlify domain config when you go 
 
 ```json
 {
-  "dev": "next dev --webpack",
-  "build": "next build --webpack",
+  "dev": "next dev --turbopack",
+  "build": "next build --turbopack",
   "start": "next start",
   "lint": "eslint"
 }
 ```
 
-`--webpack` is used because Turbopack/native SWC may fail on some Windows setups; Netlify Linux builds typically use full native tooling.
+`--turbopack` is the default for speed. If native SWC/Turbopack fails on a Windows setup, use the webpack fallbacks (`npm run dev:webpack` / `npm run build:webpack`); Netlify Linux builds use full native tooling.
 
 ---
 

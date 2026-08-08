@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { updateVendorBranding } from "@/lib/firebase/vendors";
 import {
@@ -19,10 +19,12 @@ export default function StorefrontPage() {
   const [branding, setBranding] = useState<VendorBranding>(DEFAULT_BRANDING);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [syncedVendorId, setSyncedVendorId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (vendor?.branding) setBranding({ ...DEFAULT_BRANDING, ...vendor.branding });
-  }, [vendor]);
+  if (vendor && vendor.id !== syncedVendorId) {
+    setSyncedVendorId(vendor.id);
+    if (vendor.branding) setBranding({ ...DEFAULT_BRANDING, ...vendor.branding });
+  }
 
   function set<K extends keyof VendorBranding>(key: K, value: VendorBranding[K]) {
     setBranding((b) => ({ ...b, [key]: value }));

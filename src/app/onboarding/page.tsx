@@ -34,17 +34,7 @@ export default function OnboardingPage() {
   }, [loading, user, vendor, router]);
 
   useEffect(() => {
-    if (!slugTouched && form.businessName) {
-      const s = slugify(form.businessName);
-      setForm((f) => ({ ...f, slug: s }));
-    }
-  }, [form.businessName, slugTouched]);
-
-  useEffect(() => {
-    if (!form.slug || form.slug.length < 3) {
-      setSlugHint("");
-      return;
-    }
+    if (!form.slug || form.slug.length < 3) return;
     let cancelled = false;
     const t = setTimeout(async () => {
       try {
@@ -110,6 +100,8 @@ export default function OnboardingPage() {
     );
   }
 
+  const autoSlug = !slugTouched && form.businessName ? slugify(form.businessName) : form.slug;
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-slate-50 px-4 py-10">
       <div className="mb-6 flex items-center gap-2 font-semibold text-slate-900">
@@ -137,12 +129,16 @@ export default function OnboardingPage() {
             <Input
               label="Store URL (subdomain)"
               required
-              value={form.slug}
+              value={autoSlug}
               onChange={(e) => {
                 setSlugTouched(true);
                 set("slug", slugify(e.target.value));
               }}
-              hint={slugHint || "Letters, numbers, and hyphens only."}
+              hint={
+                autoSlug.length >= 3
+                  ? slugHint || "Letters, numbers, and hyphens only."
+                  : "Letters, numbers, and hyphens only."
+              }
               placeholder="adanna-fashion"
             />
             <Select

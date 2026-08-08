@@ -56,7 +56,6 @@ export function CatalogManager({ type, title, description }: Props) {
 
   async function load() {
     if (!vendor) return;
-    setLoading(true);
     try {
       const data = await listCatalogItems(vendor.id, { type });
       setItems(data);
@@ -68,7 +67,21 @@ export function CatalogManager({ type, title, description }: Props) {
   }
 
   useEffect(() => {
-    load();
+    if (!vendor) return;
+    let cancelled = false;
+    listCatalogItems(vendor.id, { type })
+      .then((data) => {
+        if (!cancelled) setItems(data);
+      })
+      .catch((e) => {
+        console.error(e);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vendor?.id, type]);
 
@@ -352,7 +365,7 @@ export function CatalogManager({ type, title, description }: Props) {
                     multiple
                     onChange={(e) => onUpload(e.target.files)}
                     disabled={uploading}
-                    hint={uploading ? "Uploading…" : "Up to 8 images. Requires Firebase Storage."}
+                    hint={uploading ? "Uploading…" : "Up to 8 images via Cloudinary."}
                   />
                 </div>
 
