@@ -42,7 +42,7 @@ export function StorefrontShell({
 
   return (
     <div
-      className={`min-h-screen ${themeClassName(branding)}`}
+      className={`store-theme min-h-screen ${themeClassName(branding)}`}
       style={brandVars(branding)}
     >
       {branding.customCss ? (

@@ -104,7 +104,14 @@ export default function ProductDetailPage() {
   return (
     <StorefrontShell vendor={vendor}>
       {/* Slim storefront-style header so the product page keeps vendor context */}
-      <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur">
+      <header
+        className="sticky top-0 z-30 border-b"
+        style={{
+          background: `${branding.backgroundColor}E6`,
+          borderColor: `${branding.primaryColor}22`,
+          backdropFilter: "blur(8px)",
+        }}
+      >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <Link href={`/store/${vendor.slug}`} className="store-muted flex items-center gap-2 text-sm hover:opacity-80">
             ← Back to {vendor.businessName}

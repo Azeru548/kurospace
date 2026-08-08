@@ -175,7 +175,7 @@ export default function StorefrontPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div
-              className={`min-h-[420px] p-5 ${themeClassName(branding)}`}
+              className={`store-theme min-h-[420px] p-5 ${themeClassName(branding)}`}
               style={brandVars(branding)}
             >
               {branding.showCover && (

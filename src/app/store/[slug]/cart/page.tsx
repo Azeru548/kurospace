@@ -78,7 +78,14 @@ export default function StoreCartPage() {
 
   return (
     <StorefrontShell vendor={vendor}>
-      <header className="sticky top-0 z-30 border-b bg-white/90 backdrop-blur">
+      <header
+        className="sticky top-0 z-30 border-b"
+        style={{
+          background: `${branding.backgroundColor}E6`,
+          borderColor: `${branding.primaryColor}22`,
+          backdropFilter: "blur(8px)",
+        }}
+      >
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link
             href={`/store/${vendor.slug}`}
