@@ -9,6 +9,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   type DocumentData,
   type QueryConstraint,
@@ -55,6 +56,22 @@ export async function listCatalogItems(
   if (opts?.type) constraints.push(where("type", "==", opts.type));
   if (opts?.status) constraints.push(where("status", "==", opts.status));
   constraints.push(orderBy("createdAt", "desc"));
+
+  const q = query(collection(db, COLLECTIONS.catalog), ...constraints);
+  const snaps = await getDocs(q);
+  return snaps.docs.map((d) => mapItem(d.id, d.data()));
+}
+
+/** Public marketplace catalog — active items across all vendors. */
+export async function listPublicCatalogItems(opts?: {
+  type?: CatalogItemType;
+  limitCount?: number;
+}): Promise<CatalogItem[]> {
+  const db = getClientDb();
+  const constraints: QueryConstraint[] = [where("status", "==", "active")];
+  if (opts?.type) constraints.push(where("type", "==", opts.type));
+  constraints.push(orderBy("createdAt", "desc"));
+  constraints.push(limit(opts?.limitCount ?? 48));
 
   const q = query(collection(db, COLLECTIONS.catalog), ...constraints);
   const snaps = await getDocs(q);

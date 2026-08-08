@@ -135,6 +135,21 @@ export async function getVendorById(id: string): Promise<Vendor | null> {
   return mapVendor(snap.id, snap.data());
 }
 
+/** Batch-load vendors by id for marketplace/product listing joins. */
+export async function getVendorsByIds(ids: string[]): Promise<Map<string, Vendor>> {
+  const unique = [...new Set(ids.filter(Boolean))];
+  const map = new Map<string, Vendor>();
+  if (!unique.length) return map;
+
+  await Promise.all(
+    unique.map(async (id) => {
+      const v = await getVendorById(id);
+      if (v) map.set(id, v);
+    })
+  );
+  return map;
+}
+
 export async function getVendorBySlug(slug: string): Promise<Vendor | null> {
   const db = getClientDb();
   const q = query(

@@ -73,9 +73,14 @@ export default function HomePage() {
                 <Link href="/signup">
                   <Button size="lg">Create free vendor account</Button>
                 </Link>
-                <Link href="/marketplace">
+                <Link href="/products">
                   <Button size="lg" variant="outline">
-                    Browse marketplace
+                    Browse products
+                  </Button>
+                </Link>
+                <Link href="/marketplace">
+                  <Button size="lg" variant="ghost">
+                    Browse stores
                   </Button>
                 </Link>
               </div>

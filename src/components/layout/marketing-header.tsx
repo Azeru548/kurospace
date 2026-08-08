@@ -21,11 +21,11 @@ export function MarketingHeader() {
           <Link href="/#features" className="hover:text-teal-800">
             Features
           </Link>
-          <Link href="/#storefronts" className="hover:text-teal-800">
-            Storefronts
+          <Link href="/products" className="hover:text-teal-800">
+            Products
           </Link>
           <Link href="/marketplace" className="hover:text-teal-800">
-            Marketplace
+            Stores
           </Link>
         </nav>
         <div className="flex items-center gap-2">
