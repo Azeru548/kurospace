@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import type { CatalogItem, Vendor } from "@/types";
 import { DEFAULT_BRANDING } from "@/types";
 import { formatNaira } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
-import { CheckoutDialog } from "@/components/storefront/checkout-dialog";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag } from "lucide-react";
 
@@ -19,7 +17,6 @@ export function StorefrontView({
 }) {
   const branding = { ...DEFAULT_BRANDING, ...vendor.branding };
   const { addItem, count } = useCart();
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const gridClass =
     branding.layout === "list"
@@ -78,9 +75,8 @@ export function StorefrontView({
             )}
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setCheckoutOpen(true)}
+        <Link
+          href={`/store/${vendor.slug}/cart`}
           className="relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white"
           style={{ background: branding.primaryColor }}
         >
@@ -94,7 +90,7 @@ export function StorefrontView({
               {count}
             </span>
           )}
-        </button>
+        </Link>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
@@ -208,8 +204,6 @@ export function StorefrontView({
           Powered by Kurospace · {vendor.slug}.kurospace.com
         </p>
       </main>
-
-      <CheckoutDialog vendor={vendor} open={checkoutOpen} onClose={() => setCheckoutOpen(false)} />
     </div>
   );
 }

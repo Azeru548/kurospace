@@ -113,9 +113,8 @@ export default function ProductDetailPage() {
             >
               View store
             </Link>
-            <button
-              type="button"
-              onClick={() => setCheckoutOpen(true)}
+            <Link
+              href={`/store/${vendor.slug}/cart`}
               className="relative flex items-center gap-2 rounded-lg bg-teal-700 px-3 py-2 text-sm font-medium text-white hover:bg-teal-800"
             >
               <Store className="h-4 w-4" />
@@ -125,7 +124,7 @@ export default function ProductDetailPage() {
                   {count}
                 </span>
               )}
-            </button>
+            </Link>
           </div>
         </div>
       </header>

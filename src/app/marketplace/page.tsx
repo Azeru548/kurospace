@@ -2,19 +2,23 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { collection, getDocs, query, where, limit } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
 import { COLLECTIONS } from "@/lib/firebase/collections";
+import { listPublicCatalogItems } from "@/lib/firebase/catalog";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MapPin, Package, Search, Store } from "lucide-react";
-import type { Vendor } from "@/types";
+import type { CatalogItem, Vendor } from "@/types";
 import { DEFAULT_BRANDING } from "@/types";
 
 export default function MarketplacePage() {
+  const router = useRouter();
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
@@ -53,6 +57,8 @@ export default function MarketplacePage() {
             } as Vendor;
           })
         );
+        const items = await listPublicCatalogItems({ limitCount: 96 });
+        setCatalog(items);
       } catch (e) {
         console.error(e);
         setError(
@@ -82,6 +88,16 @@ export default function MarketplacePage() {
       return haystack.includes(q);
     });
   }, [vendors, search]);
+
+  const productsByVendor = useMemo(() => {
+    const map = new Map<string, CatalogItem[]>();
+    for (const item of catalog) {
+      const list = map.get(item.vendorId) ?? [];
+      list.push(item);
+      map.set(item.vendorId, list);
+    }
+    return map;
+  }, [catalog]);
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-50">
@@ -146,85 +162,124 @@ export default function MarketplacePage() {
             const serviceCount = v.stats?.serviceCount ?? 0;
             const listingCount = productCount + serviceCount;
             const location = [v.address?.city, v.address?.state].filter(Boolean).join(", ");
+            const previews = (productsByVendor.get(v.id) ?? []).slice(0, 3);
 
             return (
-              <Link key={v.id} href={`/store/${v.slug}`} className="group">
-                <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition group-hover:border-teal-200 group-hover:shadow-lg">
-                  {/* Cover — tall hero band */}
+              <article
+                key={v.id}
+                className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:border-teal-200 hover:shadow-lg"
+                onClick={() => router.push(`/store/${v.slug}`)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    router.push(`/store/${v.slug}`);
+                  }
+                }}
+                role="link"
+                tabIndex={0}
+              >
+                {/* Cover — tall hero band */}
+                <div
+                  className="relative h-36 w-full sm:h-40"
+                  style={{
+                    background: v.coverURL
+                      ? `center/cover url(${v.coverURL})`
+                      : `linear-gradient(135deg, ${primary}, ${secondary})`,
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
+                  <Badge className="absolute right-3 top-3 bg-white/95 text-slate-700 shadow-sm">
+                    {v.category}
+                  </Badge>
+                </div>
+
+                {/* Logo overlapping cover */}
+                <div className="relative px-4">
                   <div
-                    className="relative h-36 w-full sm:h-40"
-                    style={{
-                      background: v.coverURL
-                        ? `center/cover url(${v.coverURL})`
-                        : `linear-gradient(135deg, ${primary}, ${secondary})`,
-                    }}
+                    className="-mt-9 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-4 border-white text-xl font-bold text-white shadow-md"
+                    style={{ background: primary }}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/35 to-transparent" />
-                    <Badge className="absolute right-3 top-3 bg-white/95 text-slate-700 shadow-sm">
-                      {v.category}
-                    </Badge>
-                  </div>
-
-                  {/* Logo overlapping cover */}
-                  <div className="relative px-4">
-                    <div
-                      className="-mt-9 flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-4 border-white text-xl font-bold text-white shadow-md"
-                      style={{ background: primary }}
-                    >
-                      {v.logoURL ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={v.logoURL} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        v.businessName.charAt(0)
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-1 flex-col gap-2 px-4 pb-5 pt-3">
-                    <div>
-                      <h2 className="text-lg font-semibold leading-tight text-slate-900 group-hover:text-teal-900">
-                        {v.businessName}
-                      </h2>
-                      {location && (
-                        <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
-                          <MapPin className="h-3 w-3 shrink-0" />
-                          {location}
-                        </p>
-                      )}
-                    </div>
-
-                    {v.description ? (
-                      <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
-                        {v.description}
-                      </p>
+                    {v.logoURL ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={v.logoURL} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <p className="text-sm italic text-slate-400">
-                        Visit this store to explore their catalog.
+                      v.businessName.charAt(0)
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-1 flex-col gap-2 px-4 pb-5 pt-3">
+                  <div>
+                    <h2 className="text-lg font-semibold leading-tight text-slate-900 group-hover:text-teal-900">
+                      {v.businessName}
+                    </h2>
+                    {location && (
+                      <p className="mt-1 flex items-center gap-1 text-xs text-slate-500">
+                        <MapPin className="h-3 w-3 shrink-0" />
+                        {location}
                       </p>
                     )}
-
-                    <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
-                      <Badge variant="teal" className="font-normal">
-                        <Store className="mr-1 h-3 w-3" />
-                        {v.slug}.kurospace.com
-                      </Badge>
-                      {listingCount > 0 && (
-                        <span className="inline-flex items-center gap-1 text-xs text-slate-500">
-                          <Package className="h-3 w-3" />
-                          {listingCount} listing{listingCount === 1 ? "" : "s"}
-                        </span>
-                      )}
-                    </div>
-
-                    <span
-                      className="mt-3 inline-flex w-full items-center justify-center rounded-lg py-2 text-sm font-medium text-white transition group-hover:opacity-90"
-                      style={{ background: primary }}
-                    >
-                      Visit store
-                    </span>
                   </div>
-                </article>
-              </Link>
+
+                  {v.description ? (
+                    <p className="line-clamp-3 text-sm leading-relaxed text-slate-600">
+                      {v.description}
+                    </p>
+                  ) : (
+                    <p className="text-sm italic text-slate-400">
+                      Visit this store to explore their catalog.
+                    </p>
+                  )}
+
+                  {/* Product preview strip — links straight to a store's products */}
+                  {previews.length > 0 && (
+                    <div className="flex gap-2">
+                      {previews.map((item) => (
+                        <Link
+                          key={item.id}
+                          href={`/store/${v.slug}/product/${item.id}`}
+                          className="block h-16 w-14 overflow-hidden rounded-lg bg-slate-100 transition group-hover:ring-2 group-hover:ring-teal-200"
+                          title={item.name}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {item.images[0] ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={item.images[0]}
+                              alt={item.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <span className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+                              {item.type === "service" ? "Service" : "Item"}
+                            </span>
+                          )}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-auto flex flex-wrap items-center gap-2 pt-3">
+                    <Badge variant="teal" className="font-normal">
+                      <Store className="mr-1 h-3 w-3" />
+                      {v.slug}.kurospace.com
+                    </Badge>
+                    {listingCount > 0 && (
+                      <span className="inline-flex items-center gap-1 text-xs text-slate-500">
+                        <Package className="h-3 w-3" />
+                        {listingCount} listing{listingCount === 1 ? "" : "s"}
+                      </span>
+                    )}
+                  </div>
+
+                  <span
+                    className="mt-3 inline-flex w-full items-center justify-center rounded-lg py-2 text-sm font-medium text-white transition group-hover:opacity-90"
+                    style={{ background: primary }}
+                  >
+                    Visit store
+                  </span>
+                </div>
+              </article>
             );
           })}
         </div>
