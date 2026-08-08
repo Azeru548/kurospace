@@ -5,11 +5,13 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { getOrder } from "@/lib/firebase/orders";
 import { formatNaira } from "@/lib/utils";
+import { useCart } from "@/contexts/cart-context";
 import { CheckCircle2 } from "lucide-react";
 
 function SuccessContent() {
   const params = useParams();
   const search = useSearchParams();
+  const { clear } = useCart();
   const slug = String(params.slug || "");
   const orderId = search.get("order_id") || "";
   const checkoutId = search.get("checkout_id") || "";
@@ -36,6 +38,7 @@ function SuccessContent() {
         setOrderNumber(order.orderNumber);
         setTotal(order.total);
         if (order.paymentStatus === "paid") {
+          clear();
           setStatus("paid");
           return;
         }
@@ -56,7 +59,7 @@ function SuccessContent() {
     return () => {
       cancelled = true;
     };
-  }, [orderId]);
+  }, [orderId, clear]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">

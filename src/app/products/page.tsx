@@ -141,7 +141,9 @@ export default function ProductsPage() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((item) => {
             const vendor = vendors.get(item.vendorId);
-            const href = vendor ? `/store/${vendor.slug}` : "/marketplace";
+            const href = vendor
+              ? `/store/${vendor.slug}/product/${item.id}`
+              : "/marketplace";
             const desc = item.shortDescription || item.description;
 
             return (
