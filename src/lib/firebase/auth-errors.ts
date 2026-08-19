@@ -19,7 +19,10 @@ export function formatAuthError(err: unknown): string {
       "That email is already registered. Try logging in instead.",
     "auth/invalid-email": "That email address looks invalid. Check and try again.",
     "auth/weak-password": "Password is too weak. Use at least 6 characters.",
-    "auth/invalid-credential": "Wrong email or password.",
+    "auth/invalid-credential":
+      "Wrong email or password. If you don't have an account yet, sign up first.",
+    "auth/invalid-login-credentials":
+      "Wrong email or password. If you don't have an account yet, sign up first.",
     "auth/wrong-password": "Wrong email or password.",
     "auth/user-not-found": "No account found with that email. Sign up first.",
     "auth/too-many-requests":

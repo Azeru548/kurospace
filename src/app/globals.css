@@ -25,31 +25,25 @@ body {
   outline-offset: 2px;
 }
 
-/* ------------------------------------------------------------------ */
-/* Storefront theme tokens — driven by CSS vars set on the store shell */
-/* ------------------------------------------------------------------ */
-
-.store-theme .store-card {
-  border-radius: var(--brand-radius);
-  border: var(--brand-card-border);
-  box-shadow: var(--brand-card-shadow);
+/* Shared store chrome — Kurospace standard (not per-vendor) */
+.store-card {
+  border-radius: 1.125rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
 }
 
-.store-theme .store-heading {
-  font-family: var(--brand-heading-font);
-  font-weight: var(--brand-heading-weight);
-  letter-spacing: var(--brand-heading-spacing);
-  text-transform: var(--brand-heading-transform);
+.store-heading {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: #0f172a;
 }
 
-.store-theme .store-btn-primary {
-  border-radius: var(--brand-btn-radius);
+.store-muted {
+  color: #64748b;
 }
 
-.store-theme .store-muted {
-  color: var(--brand-muted);
-}
-
-.store-theme .store-section {
-  background: var(--brand-section-bg);
+.store-btn-primary {
+  border-radius: 9999px;
+  background: #0f766e;
+  color: #fff;
 }

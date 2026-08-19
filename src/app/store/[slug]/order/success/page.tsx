@@ -88,8 +88,6 @@ function SuccessContent() {
     { icon: MapPin, label: vendor?.whatsapp },
   ].filter((c) => c.label);
 
-  const branding = vendor ? { ...DEFAULT_BRANDING, ...vendor.branding } : DEFAULT_BRANDING;
-
   return (
     <StorefrontShell
       vendor={
@@ -99,7 +97,7 @@ function SuccessContent() {
           slug,
           businessName: "Store",
           category: "Store",
-          branding,
+          branding: DEFAULT_BRANDING,
           plan: "free",
           storefrontEnabled: true,
           isPublished: true,
@@ -202,10 +200,7 @@ function SuccessContent() {
                   Vendor contact
                 </h2>
                 <div className="mt-3 flex items-center gap-2">
-                  <div
-                    className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg text-sm font-bold text-white"
-                    style={{ background: branding.primaryColor }}
-                  >
+                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-teal-700 text-sm font-bold text-white">
                     {vendor.logoURL ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={vendor.logoURL} alt="" className="h-full w-full object-cover" />
@@ -242,8 +237,7 @@ function SuccessContent() {
         <div className="mt-6 flex flex-col items-center gap-2">
           <Link
             href={`/store/${slug}`}
-            className="store-btn-primary w-full rounded-lg px-4 py-2.5 text-center text-sm font-medium text-white sm:w-auto"
-            style={{ background: branding.primaryColor }}
+            className="w-full rounded-full bg-teal-700 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-teal-800 sm:w-auto"
           >
             Back to store
           </Link>

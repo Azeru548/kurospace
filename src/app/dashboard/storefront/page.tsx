@@ -1,258 +1,106 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
-import { updateVendorBranding } from "@/lib/firebase/vendors";
-import {
-  DEFAULT_BRANDING,
-  FONT_OPTIONS,
-  type StorefrontLayout,
-  type StorefrontTheme,
-  type VendorBranding,
-} from "@/types";
+import { updateVendor } from "@/lib/firebase/vendors";
+import { uploadVendorImage } from "@/lib/firebase/storage";
 import { Button } from "@/components/ui/button";
-import { Input, Select, Textarea } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { brandVars, themeClassName } from "@/lib/store-theme";
+import { ExternalLink, ImagePlus } from "lucide-react";
 
 export default function StorefrontPage() {
   const { vendor, refreshVendor } = useAuth();
-  const [branding, setBranding] = useState<VendorBranding>(DEFAULT_BRANDING);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [syncedVendorId, setSyncedVendorId] = useState<string | null>(null);
-
-  if (vendor && vendor.id !== syncedVendorId) {
-    setSyncedVendorId(vendor.id);
-    if (vendor.branding) setBranding({ ...DEFAULT_BRANDING, ...vendor.branding });
-  }
-
-  function set<K extends keyof VendorBranding>(key: K, value: VendorBranding[K]) {
-    setBranding((b) => ({ ...b, [key]: value }));
-  }
-
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!vendor) return;
-    setSaving(true);
-    setMessage("");
-    try {
-      await updateVendorBranding(vendor.id, branding);
-      await refreshVendor();
-      setMessage("Storefront branding saved.");
-    } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Could not save.");
-    } finally {
-      setSaving(false);
-    }
-  }
+  const [coverUploading, setCoverUploading] = useState(false);
 
   if (!vendor) return null;
 
+  const storePath = `/store/${vendor.slug}`;
+
+  async function onCover(files: FileList | null) {
+    if (!files?.[0] || !vendor) return;
+    setCoverUploading(true);
+    setMessage("");
+    try {
+      const url = await uploadVendorImage(vendor.id, files[0], "cover");
+      await updateVendor(vendor.id, { coverURL: url });
+      await refreshVendor();
+      setMessage("Cover image updated.");
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Cover upload failed.");
+    } finally {
+      setCoverUploading(false);
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Storefront branding</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Customise how customers see{" "}
-          <span className="font-medium text-teal-800">{vendor.slug}.kurospace.com</span>
-        </p>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Storefront</h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Every shop on Kurospace uses the same professional storefront. You supply the
+            photos and listings.
+          </p>
+        </div>
+        <Link href={storePath} target="_blank">
+          <Button variant="outline" size="sm">
+            <ExternalLink className="h-4 w-4" />
+            View live store
+          </Button>
+        </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Theme & layout</CardTitle>
-            <CardDescription>Colours, typography, and structure of your shop site.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                {(
-                  [
-                    ["primaryColor", "Primary"],
-                    ["secondaryColor", "Secondary"],
-                    ["accentColor", "Accent"],
-                    ["backgroundColor", "Background"],
-                    ["textColor", "Text"],
-                  ] as const
-                ).map(([key, label]) => (
-                  <div key={key} className="space-y-1.5">
-                    <label className="block text-sm font-medium text-slate-700">{label}</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={branding[key]}
-                        onChange={(e) => set(key, e.target.value)}
-                        className="h-10 w-12 cursor-pointer rounded border border-slate-300"
-                      />
-                      <Input
-                        value={branding[key]}
-                        onChange={(e) => set(key, e.target.value)}
-                        className="font-mono text-xs"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+      <Card className="overflow-hidden">
+        <div
+          className="h-36 bg-cover bg-center sm:h-44"
+          style={{
+            backgroundImage: vendor.coverURL
+              ? `url(${vendor.coverURL})`
+              : "linear-gradient(145deg, #0F766E, #134E4A)",
+          }}
+        />
+        <CardContent className="flex items-center gap-4 py-5">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-teal-700 text-lg font-semibold text-white">
+            {vendor.logoURL ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={vendor.logoURL} alt="" className="h-full w-full object-cover" />
+            ) : (
+              vendor.businessName.charAt(0)
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="font-semibold text-slate-900">{vendor.businessName}</p>
+            <p className="truncate text-sm text-slate-500">{vendor.category}</p>
+          </div>
+        </CardContent>
+      </Card>
 
-              <Select
-                label="Body font"
-                value={branding.fontFamily}
-                onChange={(e) => set("fontFamily", e.target.value)}
-                options={FONT_OPTIONS.map((f) => ({ value: f, label: f }))}
-              />
-              <Select
-                label="Heading font"
-                value={branding.headingFont || branding.fontFamily}
-                onChange={(e) => set("headingFont", e.target.value)}
-                options={FONT_OPTIONS.map((f) => ({ value: f, label: f }))}
-              />
-              <Select
-                label="Theme"
-                value={branding.theme}
-                onChange={(e) => set("theme", e.target.value as StorefrontTheme)}
-                options={[
-                  { value: "minimal", label: "Minimal" },
-                  { value: "bold", label: "Bold" },
-                  { value: "elegant", label: "Elegant" },
-                  { value: "marketplace", label: "Marketplace" },
-                ]}
-              />
-              <Select
-                label="Catalog layout"
-                value={branding.layout}
-                onChange={(e) => set("layout", e.target.value as StorefrontLayout)}
-                options={[
-                  { value: "grid", label: "Grid" },
-                  { value: "list", label: "List" },
-                  { value: "catalog", label: "Catalog" },
-                  { value: "showcase", label: "Showcase" },
-                ]}
-              />
-
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={branding.showLogo}
-                  onChange={(e) => set("showLogo", e.target.checked)}
-                />
-                Show logo
-              </label>
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={branding.showCover}
-                  onChange={(e) => set("showCover", e.target.checked)}
-                />
-                Show cover banner
-              </label>
-
-              <Textarea
-                label="Custom CSS"
-                value={branding.customCss || ""}
-                onChange={(e) => set("customCss", e.target.value)}
-                placeholder=".store-card { border-radius: 20px; }"
-                hint="Optional. Applies to your whole storefront. Use the .store-* classes to target cards, buttons, and headings."
-                className="min-h-[120px] font-mono text-xs"
-              />
-
-              {message && (
-                <p className="rounded-lg bg-teal-50 px-3 py-2 text-sm text-teal-900">{message}</p>
-              )}
-              <Button type="submit" loading={saving}>
-                Save branding
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Live preview */}
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <CardTitle>Preview</CardTitle>
-            <CardDescription>Approximate look of your public storefront.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div
-              className={`store-theme min-h-[420px] p-5 ${themeClassName(branding)}`}
-              style={brandVars(branding)}
-            >
-              {branding.showCover && (
-                <div
-                  className="mb-4 h-24 rounded-xl"
-                  style={{
-                    background: `linear-gradient(135deg, ${branding.primaryColor}, ${branding.secondaryColor})`,
-                  }}
-                />
-              )}
-              <div className="mb-4 flex items-center gap-3">
-                {branding.showLogo && (
-                  <div
-                    className="flex h-12 w-12 items-center justify-center rounded-lg text-sm font-bold text-white"
-                    style={{ background: branding.primaryColor }}
-                  >
-                    {vendor.businessName.charAt(0)}
-                  </div>
-                )}
-                <div>
-                  <h2
-                    className="store-heading text-lg"
-                    style={{ fontFamily: branding.headingFont || branding.fontFamily }}
-                  >
-                    {vendor.businessName}
-                  </h2>
-                  <p className="store-muted text-xs opacity-70">{vendor.category}</p>
-                </div>
-              </div>
-              <p className="store-muted mb-4 text-sm opacity-80 line-clamp-2">
-                {vendor.description || "Your business description will appear here."}
-              </p>
-              <div
-                className={
-                  branding.layout === "list"
-                    ? "space-y-2"
-                    : "grid grid-cols-2 gap-3"
-                }
-              >
-                {["Sample product", "Sample service", "Featured item", "New arrival"].map(
-                  (name, i) => (
-                    <div
-                      key={name}
-                      className="store-card p-3"
-                      style={{ borderColor: `${branding.primaryColor}33` }}
-                    >
-                      <div
-                        className="mb-2 h-16 rounded-md"
-                        style={{
-                          background:
-                            i % 2 === 0
-                              ? `${branding.primaryColor}22`
-                              : `${branding.accentColor}33`,
-                        }}
-                      />
-                      <p className="store-heading text-xs font-medium">{name}</p>
-                      <p
-                        className="store-heading text-xs font-semibold"
-                        style={{ color: branding.primaryColor }}
-                      >
-                        ₦{(i + 1) * 10000}
-                      </p>
-                    </div>
-                  )
-                )}
-              </div>
-              <button
-                type="button"
-                className="store-btn-primary mt-4 w-full py-2 text-sm font-medium text-white"
-                style={{ background: branding.primaryColor }}
-              >
-                Place order
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Cover image</CardTitle>
+          <CardDescription>
+            Wide banner at the top of your store. Logo is managed in Settings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <ImagePlus className="h-4 w-4" />
+            {coverUploading ? "Uploading…" : "Upload cover"}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={coverUploading}
+              onChange={(e) => void onCover(e.target.files)}
+            />
+          </label>
+          {message ? (
+            <p className="rounded-lg bg-teal-50 px-3 py-2 text-sm text-teal-900">{message}</p>
+          ) : null}
+        </CardContent>
+      </Card>
     </div>
   );
 }

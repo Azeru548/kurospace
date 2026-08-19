@@ -156,8 +156,8 @@ export default function MarketplacePage() {
         {/* Portrait vendor cards — taller than wide, more company context */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((v) => {
-            const primary = v.branding?.primaryColor || "#0F766E";
-            const secondary = v.branding?.secondaryColor || "#134E4A";
+            const primary = "#0F766E";
+            const secondary = "#134E4A";
             const productCount = v.stats?.productCount ?? 0;
             const serviceCount = v.stats?.serviceCount ?? 0;
             const listingCount = productCount + serviceCount;

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/contexts/auth-context";
 import { formatAuthError } from "@/lib/firebase/auth-errors";
 import { Button } from "@/components/ui/button";
@@ -11,27 +11,40 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Store } from "lucide-react";
 
 export default function LoginPage() {
-  const { signIn } = useAuth();
+  const { signIn, user, vendor, loading: authLoading, error: authError } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [awaitingSession, setAwaitingSession] = useState(false);
+
+  // Navigate only after profile + vendor are resolved — avoids the
+  // dashboard ↔ onboarding redirect loop right after sign-in.
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) return;
+    if (!awaitingSession) return;
+    router.replace(vendor || authError ? "/dashboard" : "/onboarding");
+  }, [awaitingSession, authLoading, user, vendor, authError, router]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setSubmitting(true);
     try {
       await signIn(email.trim(), password);
-      router.push("/dashboard");
+      setAwaitingSession(true);
     } catch (err) {
-      console.error("[login]", err);
+      // Don't console.error the Error object — Next.js 16 treats that as an overlay crash.
       setError(formatAuthError(err));
+      setAwaitingSession(false);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
+
+  const loading = submitting || awaitingSession;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">

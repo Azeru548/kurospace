@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -19,14 +20,17 @@ import {
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
 import { createUserProfile, getUserProfile } from "@/lib/firebase/users";
-import { getVendorByOwner } from "@/lib/firebase/vendors";
+import { getVendorById, getVendorByOwner } from "@/lib/firebase/vendors";
 import type { UserProfile, Vendor } from "@/types";
 
 interface AuthContextValue {
   user: User | null;
   profile: UserProfile | null;
   vendor: Vendor | null;
+  /** True until Firebase Auth + profile/vendor have been resolved for the current session. */
   loading: boolean;
+  /** Set when profile/vendor fetch fails — do not treat as "needs onboarding". */
+  error: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (input: {
     email: string;
@@ -46,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const loadGen = useRef(0);
 
   const loadSecondary = useCallback(async (uid: string, userHint?: User | null) => {
     let p = await getUserProfile(uid);
@@ -62,13 +68,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("[auth] could not create missing profile — publish firestore.rules", e);
       }
     }
-    setProfile(p);
-    if (p?.vendorId || p?.role === "vendor") {
-      const v = await getVendorByOwner(uid);
-      setVendor(v);
-    } else {
-      setVendor(null);
+
+    let v: Vendor | null = null;
+    if (p?.vendorId) {
+      v = await getVendorById(p.vendorId);
     }
+    if (!v && (p?.vendorId || p?.role === "vendor")) {
+      v = await getVendorByOwner(uid);
+    }
+
+    return { profile: p, vendor: v };
   }, []);
 
   useEffect(() => {
@@ -76,29 +85,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const auth = getClientAuth();
       unsub = onAuthStateChanged(auth, async (u) => {
+        // Stay in the loading state until profile + vendor are resolved.
+        // Otherwise dashboard treats "signed in, vendor still null" as onboarding
+        // and ping-pongs with /onboarding once the vendor arrives.
+        const gen = ++loadGen.current;
+        setLoading(true);
+        setError(null);
         setUser(u);
         if (u) {
           try {
-            await loadSecondary(u.uid, u);
+            const secondary = await loadSecondary(u.uid, u);
+            if (gen !== loadGen.current) return;
+            setProfile(secondary.profile);
+            setVendor(secondary.vendor);
           } catch (e) {
             console.error("Failed loading profile", e);
+            if (gen !== loadGen.current) return;
+            setProfile(null);
+            setVendor(null);
+            setError(
+              e instanceof Error
+                ? e.message
+                : "Could not load your workspace. Check your connection and try again."
+            );
           }
         } else {
           setProfile(null);
           setVendor(null);
         }
-        setLoading(false);
+        if (gen === loadGen.current) setLoading(false);
       });
     } catch (e) {
       console.error("Auth init failed", e);
-      void Promise.resolve().then(() => setLoading(false));
+      void Promise.resolve().then(() => {
+        setLoading(false);
+        setError("Auth failed to initialize. Check Firebase configuration.");
+      });
     }
-    return () => unsub();
+    return () => {
+      loadGen.current += 1;
+      unsub();
+    };
   }, [loadSecondary]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const auth = getClientAuth();
-    await signInWithEmailAndPassword(auth, email, password);
+    // Synchronously mark session as unresolved so a post-login /dashboard
+    // navigation cannot redirect to onboarding before vendor is fetched.
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      if (!auth.currentUser) setLoading(false);
+      throw e;
+    }
   }, []);
 
   const signUp = useCallback(
@@ -109,11 +150,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       phone?: string;
     }) => {
       const auth = getClientAuth();
-      const cred = await createUserWithEmailAndPassword(
-        auth,
-        input.email,
-        input.password
-      );
+      setLoading(true);
+      setError(null);
+      let cred;
+      try {
+        cred = await createUserWithEmailAndPassword(
+          auth,
+          input.email,
+          input.password
+        );
+      } catch (e) {
+        if (!auth.currentUser) setLoading(false);
+        throw e;
+      }
       try {
         await updateProfile(cred.user, { displayName: input.displayName });
       } catch (e) {
@@ -130,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (e) {
         // Auth user exists — surface Firestore/rules problems clearly
         console.error("[signUp] createUserProfile failed", e);
+        setLoading(false);
         throw e;
       }
     },
@@ -145,13 +195,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshVendor = useCallback(async () => {
     if (!user) return;
-    const v = await getVendorByOwner(user.uid);
+    const v = profile?.vendorId
+      ? (await getVendorById(profile.vendorId)) ?? (await getVendorByOwner(user.uid))
+      : await getVendorByOwner(user.uid);
     setVendor(v);
-  }, [user]);
+  }, [user, profile?.vendorId]);
 
   const refreshProfile = useCallback(async () => {
     if (!user) return;
-    await loadSecondary(user.uid, user);
+    const gen = ++loadGen.current;
+    setLoading(true);
+    setError(null);
+    try {
+      const secondary = await loadSecondary(user.uid, user);
+      if (gen !== loadGen.current) return;
+      setProfile(secondary.profile);
+      setVendor(secondary.vendor);
+    } catch (e) {
+      console.error("Failed refreshing profile", e);
+      if (gen !== loadGen.current) return;
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Could not load your workspace. Check your connection and try again."
+      );
+    } finally {
+      if (gen === loadGen.current) setLoading(false);
+    }
   }, [user, loadSecondary]);
 
   const value = useMemo(
@@ -160,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       vendor,
       loading,
+      error,
       signIn,
       signUp,
       signOut,
@@ -171,6 +242,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       vendor,
       loading,
+      error,
       signIn,
       signUp,
       signOut,

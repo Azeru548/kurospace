@@ -78,23 +78,54 @@ function NavLinks({
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, vendor, profile, loading, signOut } = useAuth();
+  const { user, vendor, profile, loading, error, signOut, refreshProfile } = useAuth();
   const [open, setOpen] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
-  // Redirects only in effects — never during render (React 19 / Next 16)
+  // Redirects only after auth + vendor lookup have settled.
+  // Do NOT treat "vendor still loading" or "vendor fetch failed" as onboarding.
   useEffect(() => {
     if (loading) return;
     if (!user) {
       router.replace("/login");
       return;
     }
-    if (!vendor) {
+    if (!vendor && !error) {
       router.replace("/onboarding");
     }
-  }, [loading, user, vendor, router]);
+  }, [loading, user, vendor, error, router]);
 
-  // While auth resolves or we redirect away, show spinner only
-  if (loading || !user || !vendor) {
+  async function handleRetry() {
+    setRetrying(true);
+    try {
+      await refreshProfile();
+    } finally {
+      setRetrying(false);
+    }
+  }
+
+  if (loading || !user) {
+    return <ShellSpinner />;
+  }
+
+  if (error && !vendor) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-4 text-center">
+        <p className="text-lg font-semibold text-slate-900">Couldn’t load your workspace</p>
+        <p className="max-w-md text-sm text-slate-600">{error}</p>
+        <button
+          type="button"
+          onClick={() => void handleRetry()}
+          disabled={retrying}
+          className="rounded-lg bg-teal-700 px-4 py-2 text-sm font-medium text-white hover:bg-teal-800 disabled:opacity-60"
+        >
+          {retrying ? "Retrying…" : "Try again"}
+        </button>
+      </div>
+    );
+  }
+
+  if (!vendor) {
     return <ShellSpinner />;
   }
 

@@ -29,8 +29,12 @@ export default function OnboardingPage() {
   const [slugHint, setSlugHint] = useState("");
 
   useEffect(() => {
-    if (!loading && !user) router.replace("/login");
-    if (!loading && vendor) router.replace("/dashboard");
+    if (loading) return;
+    if (!user) {
+      router.replace("/login");
+      return;
+    }
+    if (vendor) router.replace("/dashboard");
   }, [loading, user, vendor, router]);
 
   useEffect(() => {

@@ -1,13 +1,12 @@
 "use client";
 
+import { useMemo, useState, type MouseEvent } from "react";
 import Link from "next/link";
 import type { CatalogItem, Vendor } from "@/types";
-import { DEFAULT_BRANDING } from "@/types";
 import { formatNaira } from "@/lib/utils";
 import { useCart } from "@/contexts/cart-context";
-import { Badge } from "@/components/ui/badge";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
-import { ShoppingBag } from "lucide-react";
+import { MapPin, ShoppingBag, Store } from "lucide-react";
 
 export function StorefrontView({
   vendor,
@@ -16,195 +15,274 @@ export function StorefrontView({
   vendor: Vendor;
   items: CatalogItem[];
 }) {
-  const branding = { ...DEFAULT_BRANDING, ...vendor.branding };
   const { addItem, count } = useCart();
+  const [filter, setFilter] = useState("all");
+  const [addedId, setAddedId] = useState<string | null>(null);
+  const location = [vendor.address?.city, vendor.address?.state].filter(Boolean).join(", ");
 
-  const gridClass =
-    branding.layout === "list"
-      ? "space-y-4"
-      : branding.layout === "showcase"
-        ? "grid grid-cols-1 gap-5 sm:grid-cols-2"
-        : "grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3 xl:grid-cols-4";
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of items) {
+      if (item.category?.trim()) set.add(item.category.trim());
+    }
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [items]);
+
+  const hasProducts = items.some((i) => i.type === "product");
+  const hasServices = items.some((i) => i.type === "service");
+
+  const sorted = useMemo(
+    () => [...items].sort((a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))),
+    [items]
+  );
+
+  const filtered = useMemo(() => {
+    if (filter === "all") return sorted;
+    if (filter === "product" || filter === "service") {
+      return sorted.filter((i) => i.type === filter);
+    }
+    return sorted.filter((i) => i.category === filter);
+  }, [sorted, filter]);
+
+  const filters = [
+    { id: "all", label: "All" },
+    ...(hasProducts && hasServices
+      ? [
+          { id: "product", label: "Products" },
+          { id: "service", label: "Services" },
+        ]
+      : []),
+    ...categories.map((c) => ({ id: c, label: c })),
+  ];
+  const showFilters = filters.length > 1;
+
+  function handleAdd(item: CatalogItem) {
+    addItem(item, vendor.id, vendor.slug);
+    setAddedId(item.id);
+    window.setTimeout(() => setAddedId((id) => (id === item.id ? null : id)), 1600);
+  }
 
   return (
     <StorefrontShell vendor={vendor}>
-      {branding.showCover && (
-        <div
-          className="h-40 sm:h-56"
-          style={{
-            background: vendor.coverURL
-              ? `center/cover url(${vendor.coverURL})`
-              : `linear-gradient(135deg, ${branding.primaryColor}, ${branding.secondaryColor})`,
-          }}
-        />
-      )}
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+          <Link href={`/store/${vendor.slug}`} className="flex min-w-0 items-center gap-2.5">
+            <StoreMark vendor={vendor} className="h-8 w-8" />
+            <span className="truncate text-sm font-semibold text-slate-900">
+              {vendor.businessName}
+            </span>
+          </Link>
+          <Link
+            href={`/store/${vendor.slug}/cart`}
+            className="relative inline-flex h-9 items-center gap-2 rounded-lg bg-teal-700 px-3 text-sm font-medium text-white hover:bg-teal-800"
+            aria-label={`Cart${count ? `, ${count} items` : ""}`}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            <span className="hidden sm:inline">Cart</span>
+            {count > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-slate-900">
+                {count}
+              </span>
+            )}
+          </Link>
+        </div>
+      </header>
 
-      <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-6">
-        <div className="flex items-center gap-3">
-          {branding.showLogo && (
-            <div
-              className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl text-lg font-bold text-white shadow-sm sm:h-16 sm:w-16"
-              style={{ background: branding.primaryColor }}
-            >
-              {vendor.logoURL ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={vendor.logoURL} alt="" className="h-full w-full object-cover" />
-              ) : (
-                vendor.businessName.charAt(0)
-              )}
-            </div>
-          )}
-          <div>
-            <h1
-              className="store-heading text-xl sm:text-2xl"
-              style={{
-                color: branding.textColor,
-                fontFamily: branding.headingFont || branding.fontFamily,
-              }}
-            >
+      <section className="relative h-36 w-full overflow-hidden sm:h-44">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: vendor.coverURL
+              ? `url(${vendor.coverURL})`
+              : "linear-gradient(135deg, #0F766E, #134E4A)",
+          }}
+          role="img"
+          aria-label={`${vendor.businessName} cover`}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/25 to-black/10" />
+        <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-6xl items-end gap-3 px-4 pb-3 sm:gap-4 sm:px-6 sm:pb-4">
+          <StoreMark vendor={vendor} className="h-12 w-12 ring-2 ring-white sm:h-14 sm:w-14" />
+          <div className="min-w-0 pb-0.5 text-white">
+            <h1 className="truncate text-lg font-semibold tracking-tight sm:text-xl">
               {vendor.businessName}
             </h1>
-            <p className="text-sm opacity-70">{vendor.category}</p>
-            {(vendor.address?.city || vendor.address?.state) && (
-              <p className="mt-0.5 text-xs opacity-50">
-                {[vendor.address?.city, vendor.address?.state].filter(Boolean).join(", ")}
-              </p>
-            )}
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-white/80 sm:text-sm">
+              <span>{vendor.category}</span>
+              {location ? (
+                <span className="inline-flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  {location}
+                </span>
+              ) : null}
+            </p>
           </div>
         </div>
-        <Link
-          href={`/store/${vendor.slug}/cart`}
-          className="store-btn-primary relative flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white"
-          style={{ background: branding.primaryColor }}
-        >
-          <ShoppingBag className="h-4 w-4" />
-          Cart
-          {count > 0 && (
-            <span
-              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold"
-              style={{ background: branding.accentColor, color: "#0f172a" }}
-            >
-              {count}
+      </section>
+
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+        {vendor.description ? (
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-600">
+            {vendor.description}
+          </p>
+        ) : null}
+
+        <div className="mt-5 flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm font-semibold text-slate-900">
+            {filter === "all" ? "Shop" : filters.find((f) => f.id === filter)?.label}
+            <span className="ml-2 font-normal text-slate-500">
+              {filtered.length} {filtered.length === 1 ? "item" : "items"}
+            </span>
+          </p>
+          {showFilters ? (
+            <nav className="-mx-1 flex gap-1 overflow-x-auto" aria-label="Collections">
+              {filters.map((f) => {
+                const active = filter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setFilter(f.id)}
+                    className={`shrink-0 rounded-full px-3 py-1 text-sm transition ${
+                      active
+                        ? "bg-teal-700 text-white"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </nav>
+          ) : null}
+        </div>
+      </div>
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center py-16 text-center">
+            <Store className="mb-3 h-8 w-8 text-slate-300" />
+            <p className="font-semibold text-slate-900">
+              {items.length === 0 ? "Nothing listed yet" : "Nothing in this collection"}
+            </p>
+            <p className="mt-1 text-sm text-slate-500">
+              {items.length === 0
+                ? "This shop hasn’t published products or services."
+                : "Try another collection."}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
+            {filtered.map((item) => (
+              <ProductCard
+                key={item.id}
+                item={item}
+                vendor={vendor}
+                added={addedId === item.id}
+                onAdd={() => handleAdd(item)}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      <footer className="mt-auto border-t border-slate-200 py-6">
+        <p className="text-center text-xs text-slate-500">
+          {vendor.businessName} · {vendor.slug}.kurospace.com
+        </p>
+      </footer>
+    </StorefrontShell>
+  );
+}
+
+function StoreMark({
+  vendor,
+  className,
+}: {
+  vendor: Vendor;
+  className: string;
+}) {
+  return (
+    <div
+      className={`flex shrink-0 items-center justify-center overflow-hidden rounded-xl bg-teal-700 text-sm font-bold text-white ${className}`}
+    >
+      {vendor.logoURL ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={vendor.logoURL} alt="" className="h-full w-full object-cover" />
+      ) : (
+        vendor.businessName.charAt(0)
+      )}
+    </div>
+  );
+}
+
+function ProductCard({
+  item,
+  vendor,
+  added,
+  onAdd,
+}: {
+  item: CatalogItem;
+  vendor: Vendor;
+  added: boolean;
+  onAdd: () => void;
+}) {
+  const href = `/store/${vendor.slug}/product/${item.id}`;
+  const hoverSrc = item.images[1];
+
+  function handleAdd(e: MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    onAdd();
+  }
+
+  return (
+    <article className="group">
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-slate-100">
+        <Link href={href} className="absolute inset-0 block">
+          {item.images[0] ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.images[0]}
+                alt={item.name}
+                className={`h-full w-full object-cover transition duration-300 ${
+                  hoverSrc ? "group-hover:opacity-0" : "group-hover:scale-[1.03]"
+                }`}
+              />
+              {hoverSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={hoverSrc}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-300 group-hover:opacity-100"
+                />
+              ) : null}
+            </>
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-slate-300">
+              <Store className="h-7 w-7" />
             </span>
           )}
         </Link>
-      </header>
-
-      <main className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
-        {vendor.description && (
-          <p className="store-muted mb-8 max-w-2xl text-sm opacity-80 sm:text-base">
-            {vendor.description}
-          </p>
-        )}
-
-        {items.length === 0 ? (
-          <p className="text-sm opacity-60">This shop has no active listings yet.</p>
-        ) : (
-          <div className={gridClass}>
-            {items.map((item) => {
-              const desc = item.shortDescription || item.description;
-              const isList = branding.layout === "list";
-
-              return (
-                <article
-                  key={item.id}
-                  className={
-                    isList
-                      ? "store-card flex gap-4 overflow-hidden p-3 sm:p-4"
-                      : "store-card group flex flex-col overflow-hidden transition hover:shadow-md"
-                  }
-                  style={{ borderColor: `${branding.primaryColor}22` }}
-                >
-                  <Link
-                    href={`/store/${vendor.slug}/product/${item.id}`}
-                    className={
-                      isList
-                        ? "h-28 w-28 shrink-0 overflow-hidden rounded-lg bg-black/5 sm:h-32 sm:w-32"
-                        : "block aspect-[3/4] w-full overflow-hidden bg-black/5"
-                    }
-                  >
-                    {item.images[0] ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.images[0]}
-                        alt={item.name}
-                        className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                      />
-                    ) : null}
-                    {!isList && (
-                      <Badge
-                        variant="default"
-                        className="absolute left-2 top-2 bg-white/95 capitalize shadow-sm"
-                      >
-                        {item.type}
-                      </Badge>
-                    )}
-                  </Link>
-
-                  <div
-                    className={
-                      isList
-                        ? "flex min-w-0 flex-1 flex-col justify-between py-0.5"
-                        : "flex flex-1 flex-col gap-1.5 p-3 sm:p-4"
-                    }
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <Link href={`/store/${vendor.slug}/product/${item.id}`}>
-                        <h2 className="store-heading line-clamp-2 text-sm leading-snug hover:opacity-80 sm:text-[15px]">
-                          {item.name}
-                        </h2>
-                      </Link>
-                      {isList && (
-                        <Badge variant="default" className="shrink-0 capitalize">
-                          {item.type}
-                        </Badge>
-                      )}
-                    </div>
-                    {desc && (
-                      <p className="store-muted line-clamp-2 text-xs opacity-70 sm:line-clamp-3">
-                        {desc}
-                      </p>
-                    )}
-                    <div
-                      className={
-                        isList
-                          ? "mt-2 flex items-center justify-between gap-2"
-                          : "mt-auto flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between"
-                      }
-                    >
-                      <div>
-                        <p
-                          className="text-sm font-semibold sm:text-base"
-                          style={{ color: branding.primaryColor }}
-                        >
-                          {formatNaira(item.price)}
-                        </p>
-                        {item.compareAtPrice != null && item.compareAtPrice > item.price && (
-                          <p className="text-xs opacity-50 line-through">
-                            {formatNaira(item.compareAtPrice)}
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => addItem(item, vendor.id, vendor.slug)}
-                        className="store-btn-primary rounded-lg px-3 py-2 text-xs font-medium text-white sm:text-sm"
-                        style={{ background: branding.primaryColor }}
-                      >
-                        Add to cart
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-
-        <p className="store-muted mt-12 text-center text-xs opacity-40">
-          Powered by Kurospace · {vendor.slug}.kurospace.com
-        </p>
-      </main>
-    </StorefrontShell>
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="absolute bottom-2 right-2 z-10 rounded-lg bg-white/95 px-2.5 py-1.5 text-[11px] font-medium text-slate-900 shadow-sm backdrop-blur-sm transition hover:bg-teal-700 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
+        >
+          {added ? "Added" : "Add"}
+        </button>
+      </div>
+      <Link href={href} className="mt-2 block">
+        <h3 className="line-clamp-2 text-sm font-medium leading-snug text-slate-900">{item.name}</h3>
+      </Link>
+      <p className="mt-0.5 text-sm tabular-nums text-teal-800">
+        {formatNaira(item.price)}
+        {item.compareAtPrice != null && item.compareAtPrice > item.price ? (
+          <span className="ml-1.5 text-xs text-slate-400 line-through">
+            {formatNaira(item.compareAtPrice)}
+          </span>
+        ) : null}
+      </p>
+    </article>
   );
 }
