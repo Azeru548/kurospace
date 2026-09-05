@@ -1,15 +1,27 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import type { Vendor } from "@/types";
 import { formatNaira } from "@/lib/utils";
 import { attachBachsCheckout, createOrder } from "@/lib/firebase/orders";
 import { useCart } from "@/contexts/cart-context";
+import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { X } from "lucide-react";
 
+
 export const BACHS_NGN_MINIMUM = 1000;
+
+type CustomerDraft = {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  city: string;
+  state: string;
+  notes: string;
+};
 
 export function CheckoutDialog({
   vendor,
@@ -21,27 +33,51 @@ export function CheckoutDialog({
   onClose: () => void;
 }) {
   const { lines, removeItem, total } = useCart();
+  const { user, profile, vendor: myVendor, loading: authLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [customer, setCustomer] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    address: "",
-    city: "",
-    state: vendor.address?.state ?? "",
+  const autoStarted = useRef(false);
+
+  const saved: CustomerDraft = {
+    name: (profile?.displayName || user?.displayName || "").trim(),
+    phone: (profile?.phone || myVendor?.phone || "").trim(),
+    email: (user?.email || profile?.email || "").trim().toLowerCase(),
+    address: myVendor?.address?.street || "",
+    city: myVendor?.address?.city || "",
+    state: myVendor?.address?.state || vendor.address?.state || "",
     notes: "",
-  });
+  };
+
+  const canSkipForm = Boolean(user && saved.name && saved.email && saved.phone);
+
+  const [customer, setCustomer] = useState<CustomerDraft>(saved);
+
+  useEffect(() => {
+    if (!open) {
+      autoStarted.current = false;
+      setError("");
+      setSubmitting(false);
+      return;
+    }
+    setCustomer(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user?.uid]);
+
+  useEffect(() => {
+    if (!open || authLoading || !canSkipForm || autoStarted.current || !lines.length) return;
+    autoStarted.current = true;
+    void pay(saved);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, authLoading, canSkipForm, lines.length]);
 
   if (!open) return null;
 
-  async function placeOrder(e: FormEvent) {
-    e.preventDefault();
+  async function pay(info: CustomerDraft) {
     if (!lines.length) return;
 
-    const name = customer.name.trim();
-    const email = customer.email.trim();
-    const phone = customer.phone.trim();
+    const name = info.name.trim();
+    const email = info.email.trim();
+    const phone = info.phone.trim();
 
     if (!name || !phone) {
       setError("Name and phone are required.");
@@ -58,10 +94,17 @@ export function CheckoutDialog({
       return;
     }
 
+    const stockIssue = lines.find(
+      (l) => l.item.trackInventory && l.item.stock != null && l.quantity > l.item.stock
+    );
+    if (stockIssue) {
+      setError(`${stockIssue.item.name} only has ${stockIssue.item.stock} in stock.`);
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     try {
-      // 1) Create order in Firestore (pending payment)
       const order = await createOrder({
         vendorId: vendor.id,
         vendorSlug: vendor.slug,
@@ -77,17 +120,16 @@ export function CheckoutDialog({
           name,
           phone,
           email,
-          address: customer.address.trim() || undefined,
-          city: customer.city.trim() || undefined,
-          state: customer.state.trim() || undefined,
-          notes: customer.notes.trim() || undefined,
+          ...(info.address.trim() ? { address: info.address.trim() } : {}),
+          ...(info.city.trim() ? { city: info.city.trim() } : {}),
+          ...(info.state.trim() ? { state: info.state.trim() } : {}),
+          ...(info.notes.trim() ? { notes: info.notes.trim() } : {}),
         },
         paymentMethod: "bachs",
         paymentStatus: "pending",
         source: "storefront",
       });
 
-      // 2) Create Bachs hosted checkout (platform merchant)
       const res = await fetch("/api/payments/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -114,20 +156,25 @@ export function CheckoutDialog({
         );
       }
 
-      // Best-effort: store checkout id from the client if Admin isn't configured yet
       try {
         if (data.checkoutId) await attachBachsCheckout(order.id, data.checkoutId);
       } catch {
         /* rules may block if already written */
       }
 
-      // 3) Hosted redirect — most reliable in production (no popup blockers)
       window.location.href = data.checkoutUrl;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not place order.");
       setSubmitting(false);
     }
   }
+
+  async function placeOrder(e: FormEvent) {
+    e.preventDefault();
+    await pay(customer);
+  }
+
+  const skipUi = Boolean(user) && (authLoading || canSkipForm) && !error;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-4 sm:items-center">
@@ -146,6 +193,40 @@ export function CheckoutDialog({
 
         {lines.length === 0 ? (
           <p className="text-sm text-slate-500">Your cart is empty.</p>
+        ) : skipUi ? (
+          <div className="space-y-4">
+            <ul className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
+              {lines.map((l) => (
+                <li key={l.item.id} className="flex justify-between gap-2">
+                  <span className="truncate">
+                    {l.item.name} × {l.quantity}
+                  </span>
+                  <span className="font-medium text-teal-800">
+                    {formatNaira(l.item.price * l.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-right text-base font-bold">
+              Total{" "}
+              <span className="text-teal-800">{formatNaira(total)}</span>
+            </p>
+            <p className="text-sm text-slate-600">
+              Paying as <span className="font-medium text-slate-900">{saved.name}</span>
+              {saved.email ? ` · ${saved.email}` : ""}
+            </p>
+            {submitting || authLoading ? (
+              <p className="text-center text-sm text-slate-500">Taking you to secure payment…</p>
+            ) : null}
+            <Button
+              type="button"
+              className="w-full"
+              loading={submitting || authLoading}
+              onClick={() => void pay(saved)}
+            >
+              Pay {formatNaira(total)}
+            </Button>
+          </div>
         ) : (
           <form onSubmit={placeOrder} className="space-y-4">
             <ul className="space-y-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-sm">
@@ -223,11 +304,19 @@ export function CheckoutDialog({
             {error && (
               <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
             )}
-            <Button type="submit" className="w-full" loading={submitting}>
+            <Button
+              type="submit"
+              className="w-full"
+              loading={submitting}
+            >
               Pay with Bachs
             </Button>
           </form>
         )}
+
+        {error && skipUi ? (
+          <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        ) : null}
       </div>
     </div>
   );

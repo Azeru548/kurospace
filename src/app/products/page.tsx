@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { formatNaira } from "@/lib/utils";
 import { Package, Search, Store } from "lucide-react";
 import type { CatalogItem, Vendor } from "@/types";
+import { InlineLoader } from "@/components/brand/brand-logo";
 
 type FilterTab = "all" | "product" | "service";
 
@@ -121,7 +122,7 @@ export default function ProductsPage() {
           </div>
         </div>
 
-        {loading && <p className="text-sm text-slate-500">Loading listings…</p>}
+        {loading && <InlineLoader />}
         {error && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {error}

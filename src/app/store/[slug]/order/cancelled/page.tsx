@@ -7,6 +7,7 @@ import { getVendorBySlug } from "@/lib/firebase/vendors";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { XCircle } from "lucide-react";
 import type { Vendor } from "@/types";
+import { PageLoader } from "@/components/brand/brand-logo";
 
 function CancelledContent() {
   const params = useParams();
@@ -83,9 +84,7 @@ export default function OrderCancelledPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">
-          Loading…
-        </div>
+        <PageLoader />
       }
     >
       <CancelledContent />

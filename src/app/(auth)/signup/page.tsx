@@ -8,7 +8,7 @@ import { formatAuthError } from "@/lib/firebase/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store } from "lucide-react";
+import { BrandLockup } from "@/components/brand/brand-logo";
 
 export default function SignupPage() {
   const { signUp, user, vendor, loading: authLoading, error: authError } = useAuth();
@@ -62,11 +62,8 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-10">
-      <Link href="/" className="mb-8 flex items-center gap-2 font-semibold text-slate-900">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-700 text-white">
-          <Store className="h-4 w-4" />
-        </span>
-        Kurospace
+      <Link href="/" className="mb-8">
+        <BrandLockup className="text-lg" />
       </Link>
       <Card className="w-full max-w-md">
         <CardHeader>

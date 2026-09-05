@@ -11,6 +11,7 @@ import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { CheckCircle2, Mail, MapPin, Phone, Store } from "lucide-react";
 import type { CustomerInfo, OrderItem, Vendor } from "@/types";
 import { DEFAULT_BRANDING } from "@/types";
+import { PageLoader } from "@/components/brand/brand-logo";
 
 function SuccessContent() {
   const params = useParams();
@@ -257,9 +258,7 @@ export default function OrderSuccessPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">
-          Loading…
-        </div>
+        <PageLoader />
       }
     >
       <SuccessContent />

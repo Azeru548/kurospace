@@ -193,6 +193,28 @@ async function handleCollectionSucceeded(db: Firestore, event: BachsWebhookEvent
         paymentStatus: "paid",
       }),
     ]);
+
+    const lineItems = (order.items || []) as {
+      catalogItemId?: string;
+      quantity?: number;
+    }[];
+    for (const line of lineItems) {
+      if (!line.catalogItemId) continue;
+      const itemRef = db.collection("catalog").doc(line.catalogItemId);
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(itemRef);
+        if (!snap.exists) return;
+        const data = snap.data();
+        if (!data?.trackInventory) return;
+        const qty = Number(line.quantity) || 0;
+        const next = Math.max(0, Number(data.stock ?? 0) - qty);
+        tx.update(itemRef, {
+          stock: next,
+          status: next === 0 ? "out_of_stock" : data.status,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      });
+    }
   } catch (e) {
     console.error("[bachs-webhook] notification / email failed", e);
   }

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { MapPin, Package, Search, Store } from "lucide-react";
 import type { CatalogItem, Vendor } from "@/types";
 import { DEFAULT_BRANDING } from "@/types";
+import { InlineLoader } from "@/components/brand/brand-logo";
 
 export default function MarketplacePage() {
   const router = useRouter();
@@ -129,7 +130,7 @@ export default function MarketplacePage() {
           </div>
         </div>
 
-        {loading && <p className="text-sm text-slate-500">Loading vendors…</p>}
+        {loading && <InlineLoader />}
         {error && (
           <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             {error}

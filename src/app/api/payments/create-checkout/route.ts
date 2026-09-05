@@ -124,6 +124,19 @@ export async function POST(request: Request) {
           paymentStatus: "pending (checkout started)",
         };
 
+        const ownerId = vendor?.ownerId as string | undefined;
+        if (ownerId) {
+          await db.collection("users").doc(ownerId).collection("notifications").add({
+            type: "order_placed",
+            title: "New order",
+            body: `Order ${orderNumber} started checkout (₦${amountNgn.toLocaleString()}). Payment pending.`,
+            link: "/dashboard/orders",
+            read: false,
+            metadata: { orderId },
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        }
+
         // Business email on vendor profile (set during onboarding / settings)
         void emailVendorNewOrder(vendor?.email as string | undefined, emailPayload);
         void emailCustomerOrder(customer.email, emailPayload);

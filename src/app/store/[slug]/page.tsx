@@ -8,6 +8,7 @@ import { StorefrontView } from "@/components/storefront/storefront-view";
 import type { CatalogItem, Vendor } from "@/types";
 import Link from "next/link";
 import { Store, AlertTriangle } from "lucide-react";
+import { PageLoader } from "@/components/brand/brand-logo";
 
 export default function StoreBySlugPage() {
   const params = useParams();
@@ -52,7 +53,7 @@ export default function StoreBySlugPage() {
   }, [slug]);
 
   if (loading) {
-    return <StorefrontSkeleton />;
+    return <PageLoader />;
   }
 
   if (error || !vendor) {
@@ -107,27 +108,6 @@ function StatusScreen({
         >
           {action.label}
         </Link>
-      </div>
-    </div>
-  );
-}
-
-function StorefrontSkeleton() {
-  return (
-    <div className="min-h-screen animate-pulse bg-white">
-      <div className="h-14 border-b border-slate-200" />
-      <div className="h-36 w-full bg-slate-200 sm:h-44" />
-      <div className="mx-auto max-w-6xl px-4 pt-5 sm:px-6">
-        <div className="mb-4 h-4 w-2/3 max-w-md rounded bg-slate-100" />
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-              <div className="aspect-square rounded-xl bg-slate-100" />
-              <div className="h-3 w-3/4 rounded bg-slate-100" />
-              <div className="h-3 w-1/3 rounded bg-slate-100" />
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   );

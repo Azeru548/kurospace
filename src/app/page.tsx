@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MarketingHeader } from "@/components/layout/marketing-header";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   BarChart3,
@@ -240,6 +241,9 @@ export default function HomePage() {
       </main>
 
       <footer className="border-t border-slate-200 py-8 text-center text-sm text-slate-500">
+        <div className="mb-3 flex justify-center">
+          <BrandLogo className="h-10 w-10" />
+        </div>
         <p>© {new Date().getFullYear()} Kurospace. Built for vendors across Nigeria & Africa.</p>
       </footer>
     </div>

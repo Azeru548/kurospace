@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   },
   description:
     "Hybrid marketplace and SaaS for Nigerian vendors. List products and services, get orders, and launch a branded storefront with your own subdomain.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

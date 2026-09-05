@@ -16,6 +16,7 @@ import { Input, Textarea, Select } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, ImagePlus, X } from "lucide-react";
+import { InlineLoader } from "@/components/brand/brand-logo";
 
 const statusVariant: Record<ProductStatus, "default" | "success" | "warning" | "danger"> = {
   draft: "default",
@@ -193,7 +194,7 @@ export function CatalogManager({ type, title, description }: Props) {
       </div>
 
       {loading ? (
-        <p className="text-sm text-slate-500">Loading…</p>
+        <InlineLoader />
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">

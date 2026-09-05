@@ -24,6 +24,8 @@ import {
   Store,
 } from "lucide-react";
 import type { CatalogItem, Vendor } from "@/types";
+import { trackAnalyticsEvent } from "@/lib/firebase/analytics";
+import { PageLoader } from "@/components/brand/brand-logo";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -64,11 +66,28 @@ export default function ProductDetailPage() {
     })();
   }, [slug, itemId]);
 
+  useEffect(() => {
+    if (!vendor || !item) return;
+    void trackAnalyticsEvent({
+      vendorId: vendor.id,
+      type: item.type === "service" ? "service_view" : "product_view",
+      path: `/store/${vendor.slug}/product/${item.id}`,
+      catalogItemId: item.id,
+      dedupeKey: `item_${item.id}`,
+    });
+  }, [vendor, item]);
+
   function addToCart() {
     if (!item || !vendor) return;
     addItem(item, vendor.id, vendor.slug, quantity);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+    void trackAnalyticsEvent({
+      vendorId: vendor.id,
+      type: "add_to_cart",
+      catalogItemId: item.id,
+      path: `/store/${vendor.slug}/product/${item.id}`,
+    });
   }
 
   function buyNow() {
@@ -78,11 +97,7 @@ export default function ProductDetailPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-700 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (error || !vendor || !item) {

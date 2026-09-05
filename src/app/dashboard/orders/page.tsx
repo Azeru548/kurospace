@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/input";
+import { InlineLoader } from "@/components/brand/brand-logo";
 
 const statusOptions: { value: OrderStatus; label: string }[] = [
   { value: "pending", label: "Pending" },
@@ -68,7 +69,7 @@ export default function OrdersPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Orders</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Orders from your storefront and marketplace. Email alerts will plug into your custom provider next.
+          Orders from your storefront. Paid orders also appear in Notifications.
         </p>
       </div>
 
@@ -78,7 +79,7 @@ export default function OrdersPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-slate-500">Loading…</p>
+            <InlineLoader />
           ) : orders.length === 0 ? (
             <p className="py-8 text-center text-sm text-slate-500">
               No orders yet. When a customer places an order, it appears here.

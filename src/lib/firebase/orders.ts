@@ -61,12 +61,35 @@ export async function createOrder(input: {
   const ref = doc(collection(db, COLLECTIONS.orders));
   const subtotal = input.items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
+  const customer: Record<string, string> = {
+    name: input.customer.name,
+    phone: input.customer.phone,
+  };
+  if (input.customer.email) customer.email = input.customer.email;
+  if (input.customer.address) customer.address = input.customer.address;
+  if (input.customer.city) customer.city = input.customer.city;
+  if (input.customer.state) customer.state = input.customer.state;
+  if (input.customer.notes) customer.notes = input.customer.notes;
+
+  const items = input.items.map((i) => {
+    const row: Record<string, unknown> = {
+      catalogItemId: i.catalogItemId,
+      type: i.type,
+      name: i.name,
+      price: i.price,
+      quantity: i.quantity,
+    };
+    if (i.imageURL) row.imageURL = i.imageURL;
+    if (i.notes) row.notes = i.notes;
+    return row;
+  });
+
   const payload = {
     vendorId: input.vendorId,
     vendorSlug: input.vendorSlug,
     orderNumber: generateOrderNumber(),
-    items: input.items,
-    customer: input.customer,
+    items,
+    customer,
     status: "pending" as OrderStatus,
     subtotal,
     total: subtotal,

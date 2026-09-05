@@ -13,13 +13,14 @@ import {
   BarChart3,
   Bell,
   Settings,
-  Store,
   LogOut,
   ExternalLink,
   Menu,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { subscribeUnreadCount } from "@/lib/firebase/notifications";
+import { BrandLogo, PageLoader } from "@/components/brand/brand-logo";
 
 const nav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
@@ -33,19 +34,17 @@ const nav = [
 ];
 
 function ShellSpinner() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-700 border-t-transparent" />
-    </div>
-  );
+  return <PageLoader />;
 }
 
 function NavLinks({
   pathname,
   onNavigate,
+  unread,
 }: {
   pathname: string;
   onNavigate?: () => void;
+  unread?: number;
 }) {
   return (
     <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
@@ -54,6 +53,7 @@ function NavLinks({
           pathname === item.href ||
           (item.href !== "/dashboard" && pathname.startsWith(item.href));
         const Icon = item.icon;
+        const showBadge = item.href === "/dashboard/notifications" && (unread ?? 0) > 0;
         return (
           <Link
             key={item.href}
@@ -67,7 +67,12 @@ function NavLinks({
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            {showBadge ? (
+              <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-slate-900">
+                {unread! > 9 ? "9+" : unread}
+              </span>
+            ) : null}
           </Link>
         );
       })}
@@ -81,6 +86,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, vendor, profile, loading, error, signOut, refreshProfile } = useAuth();
   const [open, setOpen] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [unread, setUnread] = useState(0);
 
   // Redirects only after auth + vendor lookup have settled.
   // Do NOT treat "vendor still loading" or "vendor fetch failed" as onboarding.
@@ -94,6 +100,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       router.replace("/onboarding");
     }
   }, [loading, user, vendor, error, router]);
+
+  useEffect(() => {
+    if (!user) return;
+    return subscribeUnreadCount(user.uid, setUnread);
+  }, [user]);
 
   async function handleRetry() {
     setRetrying(true);
@@ -146,9 +157,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {/* Desktop sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
         <div className="flex h-16 items-center gap-2 border-b border-slate-100 px-5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-700 text-white">
-            <Store className="h-4 w-4" />
-          </span>
+          <BrandLogo className="h-8 w-8" />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-slate-900">Kurospace</p>
             <p className="truncate text-xs text-slate-500">
@@ -156,7 +165,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             </p>
           </div>
         </div>
-        <NavLinks pathname={pathname} />
+        <NavLinks pathname={pathname} unread={unread} />
         <div className="border-t border-slate-100 p-3 space-y-2">
           {storeUrl && (
             <a
@@ -191,7 +200,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <NavLinks pathname={pathname} onNavigate={() => setOpen(false)} />
+            <NavLinks pathname={pathname} unread={unread} onNavigate={() => setOpen(false)} />
           </aside>
         </div>
       )}
@@ -239,11 +248,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   }, [loading, user, router]);
 
   if (loading || !user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-700 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
   return <>{children}</>;
 }

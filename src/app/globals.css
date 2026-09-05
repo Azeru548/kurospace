@@ -25,6 +25,36 @@ body {
   outline-offset: 2px;
 }
 
+@keyframes logo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+}
+
+.animate-logo-pulse {
+  animation: logo-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes splash-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.animate-splash-progress {
+  transform-origin: left center;
+  animation: splash-progress 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 /* Shared store chrome — Kurospace standard (not per-vendor) */
 .store-card {
   border-radius: 1.125rem;

@@ -20,6 +20,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { Vendor } from "@/types";
+import { PageLoader } from "@/components/brand/brand-logo";
 
 export default function StoreCartPage() {
   const params = useParams();
@@ -50,11 +51,7 @@ export default function StoreCartPage() {
   }, [slug]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-700 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (error || !vendor) {
@@ -248,7 +245,7 @@ export default function StoreCartPage() {
                 <span className="text-teal-800">{formatNaira(total)}</span>
               </div>
               <Button className="mt-5 w-full" size="lg" onClick={() => setCheckoutOpen(true)}>
-                Proceed to checkout
+                Pay now
               </Button>
               <p className="mt-3 text-center text-xs text-slate-500">
                 You&apos;ll enter delivery details and pay securely with Bachs on the next step.

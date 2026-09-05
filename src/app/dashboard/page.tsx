@@ -18,6 +18,7 @@ import {
   Globe,
 } from "lucide-react";
 import type { Order } from "@/types";
+import { InlineLoader } from "@/components/brand/brand-logo";
 
 export default function DashboardHomePage() {
   const { vendor } = useAuth();
@@ -151,7 +152,7 @@ export default function DashboardHomePage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <p className="text-sm text-slate-500">Loading…</p>
+              <InlineLoader />
             ) : orders.length === 0 ? (
               <div className="rounded-lg bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
                 No orders yet. Share your storefront link to get your first sale.

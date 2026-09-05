@@ -399,9 +399,10 @@ Content-Type: application/json
 ## Roadmap
 
 - [x] Order / payment emails via SendLib
+- [x] In-app notifications feed (orders + payments)
+- [x] Storefront analytics (views, add-to-cart, paid revenue)
+- [x] Inventory check at checkout + decrement on paid
 - [ ] Vendor payouts / multi-merchant Bachs
-- [ ] Rich analytics charts
-- [ ] In-app notifications realtime
 - [ ] Custom domains per vendor
 - [ ] SaaS subscription plans for vendors
 

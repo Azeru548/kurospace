@@ -9,7 +9,7 @@ import { BUSINESS_CATEGORIES, NIGERIAN_STATES } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Select } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store } from "lucide-react";
+import { BrandLockup, PageLoader } from "@/components/brand/brand-logo";
 
 export default function OnboardingPage() {
   const { user, vendor, loading, refreshVendor, refreshProfile } = useAuth();
@@ -97,11 +97,7 @@ export default function OnboardingPage() {
 
   // Spinner while auth loads or while redirecting (logged out / already has vendor)
   if (loading || !user || vendor) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-teal-700 border-t-transparent" />
-      </div>
-    );
+    return <PageLoader />;
   }
 
   const autoSlug = !slugTouched && form.businessName ? slugify(form.businessName) : form.slug;
@@ -109,10 +105,7 @@ export default function OnboardingPage() {
   return (
     <div className="flex min-h-screen flex-col items-center bg-slate-50 px-4 py-10">
       <div className="mb-6 flex items-center gap-2 font-semibold text-slate-900">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-teal-700 text-white">
-          <Store className="h-4 w-4" />
-        </span>
-        Set up your business
+        <BrandLockup />
       </div>
       <Card className="w-full max-w-lg">
         <CardHeader>
