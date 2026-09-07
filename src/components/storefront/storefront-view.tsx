@@ -142,13 +142,13 @@ export function StorefrontView({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search products, services…"
-              className="h-10 w-full rounded-full border border-slate-200 bg-slate-50/80 pl-10 pr-9 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:bg-white focus:ring-4 focus:ring-teal-600/10"
+              className="h-11 w-full rounded-full border border-slate-200 bg-slate-50/80 pl-10 pr-9 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-600 focus:bg-white focus:ring-4 focus:ring-teal-600/10 sm:h-10"
             />
             {query ? (
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                className="absolute right-1 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900 text-white transition hover:bg-slate-700"
+                className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-slate-900 text-white transition hover:bg-slate-700 sm:h-7 sm:w-7"
                 aria-label="Clear search"
               >
                 <X className="h-3.5 w-3.5" />
@@ -158,7 +158,7 @@ export function StorefrontView({
 
           <Link
             href={`/store/${vendor.slug}/cart`}
-            className="relative inline-flex h-10 shrink-0 items-center gap-2 rounded-full bg-slate-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md active:scale-[0.98]"
+            className="relative inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-slate-900 px-4 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md active:scale-[0.98] sm:h-10"
             aria-label={`Cart${count ? `, ${count} items` : ""}`}
           >
             <ShoppingBag className="h-4 w-4" />
@@ -187,7 +187,7 @@ export function StorefrontView({
                   key={f.id}
                   type="button"
                   onClick={() => setFilter(f.id)}
-                  className={`relative shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-all ${
+                  className={`relative inline-flex h-11 shrink-0 items-center justify-center rounded-full px-4 text-sm font-medium transition-all sm:h-8 sm:px-4 sm:py-1.5 ${
                     active
                       ? "bg-slate-900 text-white shadow-sm"
                       : "bg-slate-50 text-slate-600 hover:bg-orange-50 hover:text-orange-700"
@@ -316,7 +316,7 @@ export function StorefrontView({
       </section>
 
       {/* CATALOG — bento canvas */}
-      <main id="catalog" className="mx-auto w-full max-w-[1280px] flex-1 bg-[var(--bento-canvas)] px-4 py-8 sm:px-6 sm:py-10">
+      <main id="catalog" className="mx-auto w-full max-w-[1280px] flex-1 scroll-mt-[120px] bg-[var(--bento-canvas)] px-4 py-8 sm:px-6 sm:py-10">
         {visible.length === 0 ? (
           <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-white py-16 text-center shadow-sm">
             <Store className="mx-auto mb-3 h-8 w-8 text-slate-300" />
@@ -567,7 +567,7 @@ function BentoCard({
           <button
             type="button"
             onClick={handleWish}
-            className={`pointer-events-auto flex h-8 w-8 items-center justify-center rounded-full backdrop-blur transition ${
+            className={`pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full backdrop-blur transition sm:h-8 sm:w-8 ${
               wished
                 ? "bg-orange-500 text-white shadow-md"
                 : "bg-white/90 text-slate-500 shadow-sm hover:bg-white hover:text-orange-600"
@@ -579,11 +579,11 @@ function BentoCard({
         </div>
 
         {/* bottom add bar — slides in */}
-        <div className="pointer-events-none absolute inset-x-2 bottom-2 flex translate-y-2 justify-center opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+        <div className="pointer-events-none absolute inset-x-2 bottom-2 hidden justify-center opacity-0 transition duration-300 group-hover:opacity-100 sm:flex sm:translate-y-2 sm:group-hover:translate-y-0">
           <button
             type="button"
             onClick={handleAdd}
-            className={`pointer-events-auto inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-xs font-semibold shadow-lg transition ${
+            className={`pointer-events-auto inline-flex h-11 items-center gap-1.5 rounded-full px-4 text-xs font-semibold shadow-lg transition sm:h-9 ${
               added ? "bg-emerald-600 text-white" : "bg-slate-900 text-white hover:bg-slate-800"
             }`}
           >
@@ -623,7 +623,7 @@ function BentoCard({
         <button
           type="button"
           onClick={handleAdd}
-          className={`mt-3 flex h-9 w-full items-center justify-center gap-1.5 rounded-full text-xs font-semibold transition sm:hidden ${
+          className={`mt-3 inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-full text-xs font-semibold transition sm:hidden ${
             added ? "bg-emerald-600 text-white" : "bg-slate-900 text-white"
           }`}
         >

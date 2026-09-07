@@ -23,7 +23,7 @@ export function Input({ className, label, error, hint, id, ...props }: InputProp
       <input
         id={inputId}
         className={cn(
-          "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50",
+          "h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 disabled:bg-slate-50 sm:h-10 sm:py-2",
           error && "border-red-500 focus:border-red-500 focus:ring-red-500/20",
           className
         )}
@@ -53,7 +53,7 @@ export function Textarea({ className, label, error, hint, id, ...props }: Textar
       <textarea
         id={inputId}
         className={cn(
-          "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 min-h-[100px]",
+          "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 min-h-[100px]",
           error && "border-red-500",
           className
         )}
@@ -83,7 +83,7 @@ export function Select({ className, label, error, options, id, ...props }: Selec
       <select
         id={inputId}
         className={cn(
-          "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20",
+          "h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20 sm:h-10 sm:py-2",
           error && "border-red-500",
           className
         )}

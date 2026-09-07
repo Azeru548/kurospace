@@ -47,7 +47,7 @@ export default function LoginPage() {
   const loading = submitting || awaitingSession;
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-8">
       <Link href="/" className="mb-8">
         <BrandLockup className="text-lg" />
       </Link>

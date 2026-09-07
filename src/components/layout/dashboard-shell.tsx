@@ -193,30 +193,33 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {open && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-slate-900/40" onClick={() => setOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-full w-72 flex-col bg-white shadow-xl">
+          <aside className="absolute left-0 top-0 flex h-full w-[84%] max-w-72 flex-col overflow-y-auto bg-white shadow-xl">
             <div className="flex h-16 items-center justify-between border-b px-4">
               <span className="font-semibold">Menu</span>
-              <button type="button" onClick={() => setOpen(false)}>
+              <button type="button" onClick={() => setOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-slate-100">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <NavLinks pathname={pathname} unread={unread} onNavigate={() => setOpen(false)} />
+            <div className="flex-1 overflow-y-auto">
+              <NavLinks pathname={pathname} unread={unread} onNavigate={() => setOpen(false)} />
+            </div>
           </aside>
         </div>
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="rounded-lg p-2 hover:bg-slate-100 lg:hidden"
+              aria-label="Open menu"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100 lg:hidden"
               onClick={() => setOpen(true)}
             >
               <Menu className="h-5 w-5" />
             </button>
-            <div className="lg:hidden">
-              <p className="text-sm font-semibold text-slate-900">
+            <div className="min-w-0 lg:hidden">
+              <p className="truncate text-sm font-semibold text-slate-900">
                 {vendor?.businessName || "Kurospace"}
               </p>
             </div>

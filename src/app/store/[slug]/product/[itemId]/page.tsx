@@ -133,13 +133,13 @@ export default function ProductDetailPage() {
     <div className="flex min-h-screen flex-col bg-slate-50">
       {/* Consistent Kurospace header — same on every product page */}
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
           <Link
             href={`/store/${vendor.slug}`}
-            className="flex items-center gap-1.5 text-sm font-medium text-slate-600 transition hover:text-teal-800"
+            className="flex min-w-0 items-center gap-1.5 text-sm font-medium text-slate-600 transition hover:text-teal-800"
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to {vendor.businessName}
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            <span className="truncate">Back to {vendor.businessName}</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link
@@ -166,16 +166,16 @@ export default function ProductDetailPage() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-8">
         {/* Breadcrumb */}
-        <nav className="mb-6 flex items-center gap-1.5 text-sm text-slate-500">
+        <nav className="mb-6 flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
           <Link href="/marketplace" className="transition hover:text-teal-800">
             Marketplace
           </Link>
-          <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-          <Link href={`/store/${vendor.slug}`} className="transition hover:text-teal-800">
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <Link href={`/store/${vendor.slug}`} className="min-w-0 truncate transition hover:text-teal-800">
             {vendor.businessName}
           </Link>
-          <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
-          <span className="truncate font-medium text-slate-900">{item.name}</span>
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+          <span className="min-w-0 truncate font-medium text-slate-900">{item.name}</span>
         </nav>
 
         <div className="grid gap-8 lg:grid-cols-2">
@@ -198,14 +198,14 @@ export default function ProductDetailPage() {
               </div>
             </div>
             {images.length > 1 && (
-              <div className="mt-3 flex gap-2">
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {images.map((url, i) => (
                   <button
                     key={url}
                     type="button"
                     onClick={() => setActiveImage(i)}
                     aria-label={`View image ${i + 1}`}
-                    className={`h-20 w-16 overflow-hidden rounded-lg border-2 transition ${
+                    className={`h-20 w-16 shrink-0 overflow-hidden rounded-lg border-2 transition ${
                       i === activeImage
                         ? "border-teal-700 ring-2 ring-teal-700/20"
                         : "border-slate-200 hover:border-teal-700/50"
@@ -257,7 +257,7 @@ export default function ProductDetailPage() {
                 <div className="flex items-center rounded-lg border border-slate-300 bg-white">
                   <button
                     type="button"
-                    className="p-2.5 text-slate-600 transition hover:text-teal-800 disabled:opacity-40"
+                    className="inline-flex h-11 w-11 items-center justify-center text-slate-600 transition hover:text-teal-800 disabled:opacity-40 sm:h-10 sm:w-10 sm:p-2.5"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1}
                     aria-label="Decrease quantity"
@@ -269,7 +269,7 @@ export default function ProductDetailPage() {
                   </span>
                   <button
                     type="button"
-                    className="p-2.5 text-slate-600 transition hover:text-teal-800 disabled:opacity-40"
+                    className="inline-flex h-11 w-11 items-center justify-center text-slate-600 transition hover:text-teal-800 disabled:opacity-40 sm:h-10 sm:w-10 sm:p-2.5"
                     onClick={() => setQuantity((q) => Math.min(99, q + 1))}
                     disabled={quantity >= 99}
                     aria-label="Increase quantity"
@@ -277,10 +277,10 @@ export default function ProductDetailPage() {
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
-                <Button variant="outline" onClick={addToCart} className="flex-1 sm:flex-none">
+                <Button variant="outline" onClick={addToCart} className="flex-1 basis-[140px] sm:flex-none">
                   {added ? "Added ✓" : "Add to cart"}
                 </Button>
-                <Button onClick={buyNow} className="flex-1 sm:flex-none">
+                <Button onClick={buyNow} className="flex-1 basis-[140px] sm:flex-none">
                   Buy now
                 </Button>
               </div>

@@ -85,56 +85,86 @@ export default function OrdersPage() {
               No orders yet. When a customer places an order, it appears here.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] text-left text-sm">
-                <thead>
-                  <tr className="border-b border-slate-100 text-xs uppercase text-slate-500">
-                    <th className="pb-3 pr-4 font-medium">Order</th>
-                    <th className="pb-3 pr-4 font-medium">Customer</th>
-                    <th className="pb-3 pr-4 font-medium">Total</th>
-                    <th className="pb-3 pr-4 font-medium">Payment</th>
-                    <th className="pb-3 pr-4 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {orders.map((o) => (
-                    <tr key={o.id} className="align-top">
-                      <td className="py-3 pr-4">
-                        <p className="font-medium text-slate-900">{o.orderNumber}</p>
-                        <p className="text-xs text-slate-500">
-                          {o.createdAt ? formatDate(o.createdAt as Date) : "—"}
-                        </p>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <p>{o.customer.name}</p>
+            <>
+              {/* Mobile cards */}
+              <div className="space-y-3 md:hidden">
+                {orders.map((o) => (
+                  <div key={o.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{o.orderNumber}</p>
+                        <p className="text-xs text-slate-500">{o.createdAt ? formatDate(o.createdAt as Date) : "—"}</p>
+                        <p className="mt-1 text-sm text-slate-700">{o.customer.name}</p>
                         <p className="text-xs text-slate-500">{o.customer.phone}</p>
-                      </td>
-                      <td className="py-3 pr-4 font-medium">{formatNaira(o.total)}</td>
-                      <td className="py-3 pr-4">
-                        <Badge variant={o.paymentStatus === "paid" ? "success" : "warning"}>
-                          {o.paymentStatus}
-                        </Badge>
-                        <p className="mt-0.5 text-xs text-slate-500">{o.paymentMethod}</p>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <Select
-                          value={o.status}
-                          onChange={(e) => changeStatus(o.id, e.target.value as OrderStatus)}
-                          options={statusOptions}
-                          className="min-w-[130px]"
-                        />
-                      </td>
-                      <td className="py-3">
-                        <Button size="sm" variant="outline" onClick={() => setSelected(o)}>
-                          Details
-                        </Button>
-                      </td>
+                      </div>
+                      <Badge variant={o.paymentStatus === "paid" ? "success" : "warning"}>{o.paymentStatus}</Badge>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between">
+                      <p className="text-sm font-bold text-teal-800">{formatNaira(o.total)}</p>
+                      <Button size="sm" variant="outline" onClick={() => setSelected(o)}>Details</Button>
+                    </div>
+                    <div className="mt-3">
+                      <Select
+                        value={o.status}
+                        onChange={(e) => changeStatus(o.id, e.target.value as OrderStatus)}
+                        options={statusOptions}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Desktop table */}
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[640px] text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-xs uppercase text-slate-500">
+                      <th className="pb-3 pr-4 font-medium">Order</th>
+                      <th className="pb-3 pr-4 font-medium">Customer</th>
+                      <th className="pb-3 pr-4 font-medium">Total</th>
+                      <th className="pb-3 pr-4 font-medium">Payment</th>
+                      <th className="pb-3 pr-4 font-medium">Status</th>
+                      <th className="pb-3 font-medium">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {orders.map((o) => (
+                      <tr key={o.id} className="align-top">
+                        <td className="py-3 pr-4">
+                          <p className="font-medium text-slate-900">{o.orderNumber}</p>
+                          <p className="text-xs text-slate-500">
+                            {o.createdAt ? formatDate(o.createdAt as Date) : "—"}
+                          </p>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <p>{o.customer.name}</p>
+                          <p className="text-xs text-slate-500">{o.customer.phone}</p>
+                        </td>
+                        <td className="py-3 pr-4 font-medium">{formatNaira(o.total)}</td>
+                        <td className="py-3 pr-4">
+                          <Badge variant={o.paymentStatus === "paid" ? "success" : "warning"}>
+                            {o.paymentStatus}
+                          </Badge>
+                          <p className="mt-0.5 text-xs text-slate-500">{o.paymentMethod}</p>
+                        </td>
+                        <td className="py-3 pr-4">
+                          <Select
+                            value={o.status}
+                            onChange={(e) => changeStatus(o.id, e.target.value as OrderStatus)}
+                            options={statusOptions}
+                            className="min-w-[130px]"
+                          />
+                        </td>
+                        <td className="py-3">
+                          <Button size="sm" variant="outline" onClick={() => setSelected(o)}>
+                            Details
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

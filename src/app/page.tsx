@@ -61,26 +61,26 @@ export default function HomePage() {
                 <Sparkles className="h-3.5 w-3.5" />
                 Built for Nigerian vendors · Expanding across Africa
               </p>
-              <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+              <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-5xl">
                 Your shop. Your brand.{" "}
                 <span className="text-teal-700">Your customers.</span>
               </h1>
-              <p className="mt-4 text-lg text-slate-600 leading-relaxed">
+              <p className="mt-4 text-base text-slate-600 leading-relaxed sm:text-lg">
                 Kurospace is a hybrid marketplace and SaaS platform. Sign up, list products
                 and services, get a branded website on your own subdomain, and manage orders
                 from one dashboard.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/signup">
-                  <Button size="lg">Create free vendor account</Button>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                <Link href="/signup" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto">Create free vendor account</Button>
                 </Link>
-                <Link href="/products">
-                  <Button size="lg" variant="outline">
+                <Link href="/products" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
                     Browse products
                   </Button>
                 </Link>
-                <Link href="/marketplace">
-                  <Button size="lg" variant="ghost">
+                <Link href="/marketplace" className="w-full sm:w-auto">
+                  <Button size="lg" variant="ghost" className="w-full sm:w-auto">
                     Browse stores
                   </Button>
                 </Link>

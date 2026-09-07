@@ -154,7 +154,7 @@ export default function MarketplacePage() {
           </Card>
         )}
 
-        {/* Portrait vendor cards — taller than wide, more company context */}
+        {/* Portrait vendor cards — single col on mobile for readability */}
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((v) => {
             const primary = "#0F766E";

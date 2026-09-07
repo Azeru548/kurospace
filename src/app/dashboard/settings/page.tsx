@@ -127,8 +127,8 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
-            <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-teal-100 text-xl font-bold text-teal-900">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-teal-100 text-xl font-bold text-teal-900">
                 {vendor.logoURL ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={vendor.logoURL} alt="" className="h-full w-full object-cover" />
@@ -136,13 +136,15 @@ export default function SettingsPage() {
                   vendor.businessName.charAt(0)
                 )}
               </div>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => onLogo(e.target.files)}
-                disabled={logoUploading}
-                hint={logoUploading ? "Uploading…" : "Upload logo"}
-              />
+              <div className="min-w-0 flex-1">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => onLogo(e.target.files)}
+                  disabled={logoUploading}
+                  hint={logoUploading ? "Uploading…" : "Upload logo"}
+                />
+              </div>
             </div>
             <Input
               label="Business name"

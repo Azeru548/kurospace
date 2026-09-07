@@ -207,7 +207,7 @@ export function CatalogManager({ type, title, description }: Props) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => (
-            <Card key={item.id} className="overflow-hidden">
+            <Card key={item.id} className="overflow-hidden flex flex-col">
               <div className="aspect-[4/3] bg-slate-100">
                 {item.images[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -233,13 +233,14 @@ export function CatalogManager({ type, title, description }: Props) {
                     {item.shortDescription || item.description}
                   </p>
                 ) : null}
-                <div className="flex gap-2 pt-1">
-                  <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
+                <div className="flex gap-2 pt-3">
+                  <Button size="sm" variant="outline" onClick={() => openEdit(item)} className="flex-1 sm:flex-none">
                     <Pencil className="h-3.5 w-3.5" />
                     Edit
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => onDelete(item.id)}>
-                    <Trash2 className="h-3.5 w-3.5 text-red-600" />
+                  <Button size="sm" variant="ghost" onClick={() => onDelete(item.id)} className="inline-flex h-11 w-11 items-center justify-center sm:h-8 sm:w-auto sm:px-3">
+                    <Trash2 className="h-4 w-4 text-red-600" />
+                    <span className="sr-only sm:not-sr-only sm:ml-1">Delete</span>
                   </Button>
                 </div>
               </CardContent>
@@ -249,13 +250,13 @@ export function CatalogManager({ type, title, description }: Props) {
       )}
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
-          <Card className="max-h-[90vh] w-full max-w-lg overflow-y-auto">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-3 sm:items-center sm:p-4">
+          <Card className="max-h-[90dvh] w-full max-w-lg overflow-y-auto">
+            <CardHeader className="flex flex-row items-center justify-between gap-3">
+              <CardTitle className="text-lg">
                 {editing ? `Edit ${type}` : `New ${type}`}
               </CardTitle>
-              <button type="button" onClick={() => setOpen(false)} className="rounded p-1 hover:bg-slate-100">
+              <button type="button" onClick={() => setOpen(false)} className="inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-slate-100 sm:h-8 sm:w-8">
                 <X className="h-5 w-5" />
               </button>
             </CardHeader>

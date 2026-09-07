@@ -177,8 +177,8 @@ export function CheckoutDialog({
   const skipUi = Boolean(user) && (authLoading || canSkipForm) && !error;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-4 sm:items-center">
-      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-3 sm:items-center sm:p-4">
+      <div className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 text-slate-900 shadow-xl sm:p-5">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-bold text-slate-900">Checkout · {vendor.businessName}</h3>
           <button
@@ -279,7 +279,7 @@ export function CheckoutDialog({
               value={customer.address}
               onChange={(e) => setCustomer((c) => ({ ...c, address: e.target.value }))}
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Input
                 label="City"
                 value={customer.city}

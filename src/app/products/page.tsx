@@ -87,7 +87,7 @@ export default function ProductsPage() {
           </Link>
         </div>
 
-        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-wrap gap-2">
             {(
               [
@@ -100,7 +100,7 @@ export default function ProductsPage() {
                 key={tab.id}
                 type="button"
                 onClick={() => setFilter(tab.id)}
-                className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition ${
+                className={`inline-flex h-11 items-center justify-center rounded-full px-4 text-sm font-medium transition sm:h-8 sm:px-3.5 sm:py-1.5 ${
                   filter === tab.id
                     ? "bg-teal-800 text-white"
                     : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50"
@@ -139,7 +139,7 @@ export default function ProductsPage() {
           </Card>
         )}
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((item) => {
             const vendor = vendors.get(item.vendorId);
             const href = vendor

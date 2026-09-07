@@ -55,15 +55,15 @@ export default function NotificationsPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Notifications</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-slate-900 sm:text-2xl">Notifications</h1>
           <p className="mt-1 text-sm text-slate-600">
             New orders and payment alerts for your store.
           </p>
         </div>
         {unread.length > 0 ? (
-          <Button variant="outline" size="sm" onClick={() => void markAll()}>
+          <Button variant="outline" size="sm" onClick={() => void markAll()} className="shrink-0 self-start sm:self-auto">
             Mark all read
           </Button>
         ) : null}
