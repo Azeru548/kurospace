@@ -30,5 +30,5 @@ export function StorefrontShell({
     };
   }, [vendor.businessName, vendor.logoURL]);
 
-  return <div className="flex min-h-screen flex-col bg-white text-slate-900">{children}</div>;
+  return <div className="flex min-h-screen flex-col bg-[var(--bento-canvas)] text-slate-900">{children}</div>;
 }
